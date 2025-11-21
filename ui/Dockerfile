@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 5173
 
 # Default command (can be overridden in docker-compose.yaml)
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
