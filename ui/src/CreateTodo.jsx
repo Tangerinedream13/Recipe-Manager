@@ -14,8 +14,7 @@ export default function CreateTodo({ API_URL, onTodoCreated }) {
         });
 
         if (response.ok && onTodoCreated) {
-
-            onTodoCreated(); 
+            onTodoCreated();
             setTitle('');
             setDescription('');
         }
