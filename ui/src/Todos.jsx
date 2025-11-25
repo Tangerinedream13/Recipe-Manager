@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function Todos({ API_URL, refreshTrigger }) {  // Add refreshTrigger prop
+export default function Todos({ API_URL, refreshTrigger }) {
     const [todoList, setTodoList] = useState([]);
 
     async function fetchTodos() {
@@ -11,15 +11,16 @@ export default function Todos({ API_URL, refreshTrigger }) {  // Add refreshTrig
 
     useEffect(() => {
         fetchTodos();
-    }, [refreshTrigger]);  // Add refreshTrigger to dependencies
+    }, [refreshTrigger]);
 
     async function deleteTodo(todoId) {
         await fetch(`${API_URL}/todos/${todoId}`, {
             method: 'DELETE',
         });
-        // Refresh the list to show the todo is gone
+
         fetchTodos();
     }
+
     return (
         <div className="todos-container">
             <ul>
@@ -35,6 +36,9 @@ export default function Todos({ API_URL, refreshTrigger }) {  // Add refreshTrig
                             <br />
                             {todo.description}
                         </div>
+                        <button onClick={() => deleteTodo(todo.id)}>
+                            Delete
+                        </button>
                     </li>
                 ))}
             </ul>
