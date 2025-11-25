@@ -10,3 +10,4 @@ echo 'Running black...'
 poetry run black . --check        # runs the Python formatter
 
 echo '✨✨✨✨✨ Completed checks ✨✨✨✨✨'
+

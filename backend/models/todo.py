@@ -1,9 +1,6 @@
 from datetime import datetime
-
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
-
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from .base import Base
-
 
 # Your model inherits from Base
 class Todo(Base):

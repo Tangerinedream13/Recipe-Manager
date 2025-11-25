@@ -27,8 +27,6 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
-from routers import category
-app.include_router(category.router)
 
 from models import Base, Todo
 
@@ -49,7 +47,6 @@ engine = create_async_engine(DATABASE_URL, echo=False)
 # Each request will get its own session to query the database
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-
 # Step 4: Create a function to get database sessions
 # This is called a "dependency" - FastAPI will automatically call this
 # for each request and pass the result to your endpoint functions
@@ -65,11 +62,9 @@ async def get_db():
     This ensures database connections are properly cleaned up.
     """
     async with AsyncSessionLocal() as session:
-        yield session
+        yield session  # Give the session to the endpoint
+        # After the endpoint finishes, the session is automatically closed
 
-
-# Give the session to the endpoint
-# After the endpoint finishes, the session is automatically closed
 # Step 5: Define what our API requests and responses will look like
 # These are called "Pydantic models" or "schemas"
 # They define the structure of data that will be sent to and from the API
@@ -109,11 +104,9 @@ class TodoResponse(TodoBase):
     class Config:
         from_attributes = True
 
-
 # Step 6: Create the FastAPI app
 # This is the main application object - it handles all incoming requests
 app = FastAPI(title="TODO API", description="A simple CRUD API for managing TODO items")
-
 
 # Step 7: Create database tables on startup
 # This automatically creates all tables defined in your SQLAlchemy models
@@ -132,7 +125,6 @@ async def create_tables():
         await conn.run_sync(Base.metadata.create_all)
     print("✅ Database tables created successfully")
 
-
 # Step 8: Add CORS middleware to allow frontend requests
 # CORS (Cross-Origin Resource Sharing) is needed because your React app
 # runs on a different port (5173) than your API (8000)
@@ -146,7 +138,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers
 )
-
 # Step 9: Create our API endpoints
 # These are the URLs that clients can visit to interact with todos
 # IMPORTANT: API routes must be defined BEFORE the SPA catch-all route
@@ -164,7 +155,6 @@ async def get_all_todos(db: AsyncSession = Depends(get_db)):
     todos = result.scalars().all()
     return todos
 
-
 # READ: Get a single todo by ID
 @app.get("/todos/{todo_id}", response_model=TodoResponse)
 async def get_todo(todo_id: int, db: AsyncSession = Depends(get_db)):
@@ -180,9 +170,7 @@ async def get_todo(todo_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Todo with ID {todo_id} not found")
 
     return todo
-
-
-# Step 10:
+# Step 10: 
 # CREATE: Create a new todo
 @app.post("/todos", response_model=TodoResponse, status_code=201)
 async def create_todo(todo: TodoCreate, db: AsyncSession = Depends(get_db)):
@@ -206,9 +194,7 @@ async def create_todo(todo: TodoCreate, db: AsyncSession = Depends(get_db)):
     await db.refresh(db_todo)
 
     return db_todo
-
-
-# Step 11:
+# Step 11: 
 # UPDATE: Update an existing todo (PATCH - partial update)
 @app.patch("/todos/{todo_id}", response_model=TodoResponse)
 async def patch_todo(
@@ -239,8 +225,6 @@ async def patch_todo(
     await db.refresh(db_todo)
 
     return db_todo
-
-
 # Step 12: DELETE: Delete a todo
 @app.delete("/todos/{todo_id}", status_code=204)
 async def delete_todo(todo_id: int, db: AsyncSession = Depends(get_db)):
@@ -261,8 +245,6 @@ async def delete_todo(todo_id: int, db: AsyncSession = Depends(get_db)):
     await db.commit()
 
     return None
-
-
 # Step 13: Serve static files (frontend) in production
 # This must come AFTER all API routes so API routes are matched first
 # Check if static directory exists (production build)
@@ -287,8 +269,6 @@ if os.path.exists(static_dir):
         if os.path.exists(index_path):
             return FileResponse(index_path)
         raise HTTPException(status_code=404, detail="Frontend not found")
-
-
 # Step 14: Run the server
 # This code only runs if you execute the file directly (not if imported)
 if __name__ == "__main__":

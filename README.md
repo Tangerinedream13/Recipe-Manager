@@ -1,6 +1,3 @@
-# project02-fall2025
-Project 2 repo for CSCI-338 SWE
-
 # Project 2: Full-Stack TODO Application
 
 A full-stack web application built with FastAPI (backend), React (frontend), and PostgreSQL (database).
@@ -40,4 +37,3 @@ project02-fall2025/
 ## Development
 
 See the project documentation for detailed setup and development instructions.
-Initial project setup with folder structure, .gitignore, and README
