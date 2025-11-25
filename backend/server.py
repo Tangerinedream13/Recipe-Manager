@@ -27,6 +27,8 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
+from routers import category
+app.include_router(category.router)
 
 from models import Base, Todo
 
