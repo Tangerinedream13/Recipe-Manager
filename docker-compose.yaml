@@ -46,7 +46,7 @@ services:
       dockerfile: Dockerfile
     container_name: todo_frontend
     ports:
-      - "5435:5173"
+      - "5173:5173"
     volumes:
       - ./ui:/app
       - /app/node_modules
