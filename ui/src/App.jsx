@@ -1,25 +1,34 @@
 import React, { useState } from 'react';
 import './globals.css';
-import Todos from './Todos';
-import CreateTodo from './CreateTodo';
+
+import Recipes from './Recipes';
+import CreateRecipe from './CreateRecipe';
 
 const API_URL = 'http://localhost:8000';
 
 export default function App() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    function refreshTodos() {
+    function refreshRecipes() {
         setRefreshTrigger((prev) => prev + 1);
     }
 
     return (
         <>
             <header>
-                <h1>TODO List</h1>
+                <h1>Recipe Manager</h1>
             </header>
+
             <main>
-                <Todos API_URL={API_URL} refreshTrigger={refreshTrigger} />
-                <CreateTodo API_URL={API_URL} onTodoCreated={refreshTodos} />
+                <Recipes 
+                    API_URL={API_URL} 
+                    refreshTrigger={refreshRecipes} 
+                />
+
+                <CreateRecipe 
+                    API_URL={API_URL} 
+                    onRecipeCreated={refreshRecipes} 
+                />
             </main>
         </>
     );
