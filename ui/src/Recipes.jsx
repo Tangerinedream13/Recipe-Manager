@@ -1,72 +1,73 @@
-import React, { useState, useEffect } from "react";
+import React from 'react';
+import { Box, Heading, SimpleGrid, Text, Stack, Badge } from '@chakra-ui/react';
 
-export default function Recipes({ API_URL, refreshTrigger }) {
-  const [recipeList, setRecipeList] = useState([]);
+export default function Recipes({ recipes }) {
+    return (
+        <Box>
+            <Heading size="lg" mb={6} color="brand.700">
+                Your Recipes
+            </Heading>
 
-  // Fetch recipes from recipes
-  async function fetchRecipes() {
-    try {
-      const res = await fetch(`${API_URL}/recipes`);
-      if (!res.ok) throw new Error("Failed to fetch recipes");
-      const data = await res.json();
-      setRecipeList(data);
-    } catch (err) {
-      console.error("Error fetching recipes:", err);
-    }
-  }
+            {recipes.length === 0 ? (
+                <Text color="gray.600">
+                    No recipes yet. Click “Add New Recipe” in the sidebar to
+                    create one.
+                </Text>
+            ) : (
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                    {recipes.map((recipe) => (
+                        <Box
+                            key={recipe.id}
+                            bg="white"
+                            p={6}
+                            borderRadius="xl"
+                            boxShadow="sm"
+                            borderWidth="1px"
+                            borderColor="brand.100"
+                        >
+                            <Stack spacing={3}>
+                                <Heading size="md" color="brand.700">
+                                    {recipe.name}
+                                </Heading>
 
-  // Delete a recipe
-  async function deleteRecipe(recipeId) {
-    try {
-      await fetch(`${API_URL}/recipes/${recipeId}`, {
-        method: "DELETE",
-      });
-      fetchRecipes();
-    } catch (err) {
-      console.error("Error deleting recipe:", err);
-    }
-  }
+                                {recipe.description && (
+                                    <Text fontSize="sm" color="gray.700">
+                                        {recipe.description}
+                                    </Text>
+                                )}
 
-  useEffect(() => {
-    fetchRecipes();
-  }, [refreshTrigger]);
+                                {recipe.ingredients && (
+                                    <Box>
+                                        <Badge mb={1} colorScheme="orange">
+                                            Ingredients
+                                        </Badge>
+                                        <Text
+                                            fontSize="sm"
+                                            whiteSpace="pre-wrap"
+                                        >
+                                            {recipe.ingredients}
+                                        </Text>
+                                    </Box>
+                                )}
 
-  return (
-    <div className="recipes-container">
-      <ul>
-        {recipeList.map((recipe) => (
-          <li key={recipe.id}>
-            <div>
-              <strong>{recipe.title}</strong>
-              <br />
-              {recipe.description && (
-                <>
-                  <em>{recipe.description}</em>
-                  <br />
-                </>
-              )}
-
-              {recipe.ingredients && (
-                <>
-                  <strong>Ingredients:</strong>
-                  <div>{recipe.ingredients}</div>
-                </>
-              )}
-
-              {recipe.instructions && (
-                <>
-                  <strong>Instructions:</strong>
-                  <div>{recipe.instructions}</div>
-                </>
-              )}
-            </div>
-
-            <button onClick={() => deleteRecipe(recipe.id)}>
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+                                {recipe.steps && (
+                                    <Box>
+                                        <Badge mb={1} colorScheme="orange">
+                                            Steps
+                                        </Badge>
+                                        <Text
+                                            fontSize="sm"
+                                            whiteSpace="pre-wrap"
+                                        >
+                                            {recipe.steps}
+                                        </Text>
+                                    </Box>
+                                )}
+                            </Stack>
+                        </Box>
+                    ))}
+                </SimpleGrid>
+            )}
+        </Box>
+    );
 }

@@ -1,80 +1,116 @@
 import React, { useState } from "react";
+import {
+  Box,
+  Heading,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
+  Button,
+  Stack,
+  useToast,
+} from "@chakra-ui/react";
 
-export default function CreateRecipe({ API_URL, onRecipeCreated }) {
-  const [title, setTitle] = useState("");
+export default function CreateRecipe({ onSave }) {
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [ingredients, setIngredients] = useState("");
-  const [instructions, setInstructions] = useState("");
+  const [steps, setSteps] = useState("");
 
-  async function handleSubmit(e) {
+  const toast = useToast();
+
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    try {
-      const response = await fetch(`${API_URL}/recipes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          description,
-          ingredients,
-          instructions,
-        }),
+    if (!name.trim()) {
+      toast({
+        title: "Recipe needs a name",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
       });
-
-      if (!response.ok) {
-        console.error("Failed to create recipe");
-        return;
-      }
-
-      if (onRecipeCreated) {
-        onRecipeCreated();
-      }
-
-      // Clear form
-      setTitle("");
-      setDescription("");
-      setIngredients("");
-      setInstructions("");
-
-    } catch (err) {
-      console.error("Error creating recipe:", err);
+      return;
     }
-  }
+
+    onSave({ name, description, ingredients, steps });
+
+    setName("");
+    setDescription("");
+    setIngredients("");
+    setSteps("");
+
+    toast({
+      title: "Recipe saved",
+      status: "success",
+      duration: 2000,
+      isClosable: true,
+    });
+  };
 
   return (
-    <form className="form-container" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Recipe Name"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-      />
+    <Box
+      maxW="700px"
+      bg="white"
+      p={8}
+      borderRadius="xl"
+      boxShadow="md"
+      borderWidth="1px"
+      borderColor="brand.100"
+    >
+      <Heading size="lg" mb={6} color="brand.700">
+        Add New Recipe
+      </Heading>
 
-      <input
-        type="text"
-        placeholder="Short Description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
+      <form onSubmit={handleSubmit}>
+        <Stack spacing={5}>
+          <FormControl isRequired>
+            <FormLabel>Recipe Name</FormLabel>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Chicken Alfredo"
+              bg="brand.50"
+            />
+          </FormControl>
 
-      <textarea
-        placeholder="Ingredients (one list or paragraph)"
-        value={ingredients}
-        onChange={(e) => setIngredients(e.target.value)}
-      />
+          <FormControl>
+            <FormLabel>Description</FormLabel>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="A creamy Italian classic..."
+              rows={3}
+              bg="brand.50"
+            />
+          </FormControl>
 
-      <textarea
-        placeholder="Instructions"
-        value={instructions}
-        onChange={(e) => setInstructions(e.target.value)}
-      />
+          <FormControl>
+            <FormLabel>Ingredients</FormLabel>
+            <Textarea
+              value={ingredients}
+              onChange={(e) => setIngredients(e.target.value)}
+              placeholder="2 cups pasta, 1 cup cream..."
+              rows={4}
+              bg="brand.50"
+            />
+          </FormControl>
 
-      <button type="submit">Add Recipe</button>
+          <FormControl>
+            <FormLabel>Steps</FormLabel>
+            <Textarea
+              value={steps}
+              onChange={(e) => setSteps(e.target.value)}
+              placeholder={"1. Boil pasta\n2. Make sauce..."}
+              rows={4}
+              bg="brand.50"
+            />
+          </FormControl>
 
-      <div className="side-note">
-        Recipe list updates automatically after adding a new recipe!
-      </div>
-    </form>
+          <Button type="submit" colorScheme="orange" alignSelf="flex-start">
+            Save Recipe
+          </Button>
+        </Stack>
+      </form>
+    </Box>
   );
 }

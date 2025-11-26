@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # PostgreSQL Database Service
   db:
     build:
       context: ./database
@@ -10,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: todo   # ✅ MATCH backend database name
+      POSTGRES_DB: todo
     ports:
       - "5437:5432"
     volumes:
@@ -22,7 +19,6 @@ services:
       retries: 10
       start_period: 10s
 
-  # FastAPI Backend Service
   backend:
     build:
       context: ./backend
@@ -32,7 +28,7 @@ services:
       POSTGRES_DB: todo
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/todo  # ✅ REQUIRED FIX
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/todo
     ports:
       - "8000:8000"
     depends_on:
@@ -42,7 +38,6 @@ services:
       - ./backend:/app
     command: poetry run uvicorn server:app --host 0.0.0.0 --port 8000 --reload
 
-  # React Frontend Service
   frontend:
     build:
       context: ./ui
@@ -50,14 +45,11 @@ services:
     container_name: todo_frontend
     ports:
       - "5173:5173"
-    volumes:
-      - ./ui:/app
-      - /app/node_modules
     environment:
       VITE_API_URL: http://localhost:8000
     depends_on:
       - backend
-    command: npm run dev -- --host 0.0.0.0
+    command: npm run dev -- --host 0.0.0.0 --port 5173
 
 volumes:
   postgres_data:
