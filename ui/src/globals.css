@@ -6,8 +6,8 @@ body {
 }
 
 header {
-    background-color: hotpink;
-    color: black;
+    background-color: rgb(10, 51, 7);
+    color: rgb(246, 240, 240);
     padding: 10px;
     text-align: center;
 }
@@ -22,7 +22,7 @@ main {
     max-width: 600px;
     margin: 30px auto;
     padding: 20px;
-    border: dashed 3px hotpink;
+    border: dashed 3px rgb(47, 27, 110);
 }
 
 ul {
@@ -45,7 +45,7 @@ li {
 span {
     font-weight: bold;
     color: black;
-    background-color: hotpink;
+    background-color: rgb(27, 15, 61);
     padding: 2px 5px;
     border-radius: 5px;
 }
@@ -70,8 +70,8 @@ span {
 
 .form-container button {
     padding: 10px 20px;
-    background-color: hotpink;
-    color: black;
+    background-color: rgb(9, 44, 26);
+    color: rgb(241, 235, 235);
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -80,7 +80,7 @@ span {
 }
 
 .form-container button:hover {
-    background-color: #ff69b4;
+    background-color: #0d4111;
 }
 
 button {

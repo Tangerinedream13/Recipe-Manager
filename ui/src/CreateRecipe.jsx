@@ -3,19 +3,21 @@ import React, { useState } from "react";
 export default function CreateRecipe({ API_URL, onRecipeCreated }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [ingredients, setIngredients] = useState("");
+  const [instructions, setInstructions] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
 
     try {
-      // Still posting to /todos until backend is rebuilt
-      const response = await fetch(`${API_URL}/todos`, {
+      const response = await fetch(`${API_URL}/recipes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
           description,
-          completed: false, // still needed for now
+          ingredients,
+          instructions,
         }),
       });
 
@@ -28,9 +30,11 @@ export default function CreateRecipe({ API_URL, onRecipeCreated }) {
         onRecipeCreated();
       }
 
-      // Clear form fields
+      // Clear form
       setTitle("");
       setDescription("");
+      setIngredients("");
+      setInstructions("");
 
     } catch (err) {
       console.error("Error creating recipe:", err);
@@ -52,6 +56,18 @@ export default function CreateRecipe({ API_URL, onRecipeCreated }) {
         placeholder="Short Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
+      />
+
+      <textarea
+        placeholder="Ingredients (one list or paragraph)"
+        value={ingredients}
+        onChange={(e) => setIngredients(e.target.value)}
+      />
+
+      <textarea
+        placeholder="Instructions"
+        value={instructions}
+        onChange={(e) => setInstructions(e.target.value)}
       />
 
       <button type="submit">Add Recipe</button>

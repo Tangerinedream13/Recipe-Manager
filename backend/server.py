@@ -1,13 +1,13 @@
 """
-Simple FastAPI Starter - TODO API
+Simple FastAPI Starter - Recipe API
 ==================================
 
 This is a minimal FastAPI example, designed for beginners.
 It shows the basic structure of a REST API with database access.
 
 HOW IT WORKS:
-1. Client (your React app) makes a request to a URL (e.g., /todos)
-2. FastAPI finds the function decorated with @app.get("/todos")
+1. Client (your React app) makes a request to a URL (e.g., /recipes)
+2. FastAPI finds the function decorated with @app.get("/recipes")
 3. That function uses the database connection to query data
 4. The function returns data, which FastAPI converts to JSON
 5. The JSON is sent back to the client
@@ -28,7 +28,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
 
-from models import Base, Todo
+# Import Base + Recipe model
+from models import Base, Recipe
+
 
 # Step 2: Load environment variables from .env file
 # Looks for .env file in current directory and parent directories
@@ -47,6 +49,7 @@ engine = create_async_engine(DATABASE_URL, echo=False)
 # Each request will get its own session to query the database
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
+
 # Step 4: Create a function to get database sessions
 # This is called a "dependency" - FastAPI will automatically call this
 # for each request and pass the result to your endpoint functions
@@ -62,7 +65,7 @@ async def get_db():
     This ensures database connections are properly cleaned up.
     """
     async with AsyncSessionLocal() as session:
-        yield session  # Give the session to the endpoint
+        yield session
         # After the endpoint finishes, the session is automatically closed
 
 # Step 5: Define what our API requests and responses will look like
@@ -70,46 +73,48 @@ async def get_db():
 # They define the structure of data that will be sent to and from the API
 
 
-class TodoBase(BaseModel):
-    """Base schema with common fields for todos"""
+class RecipeBase(BaseModel):
+    """Base schema with common fields for recipes"""
 
     title: str
     description: Optional[str] = None
-    completed: bool = False
+    ingredients: Optional[str] = None      # comma-separated or text block
+    instructions: Optional[str] = None     # full cooking instructions
 
 
-class TodoCreate(TodoBase):
-    """Schema for creating a new todo"""
-
+class RecipeCreate(RecipeBase):
+    """Schema for creating a new recipe"""
     pass
 
 
-class TodoUpdate(BaseModel):
-    """Schema for updating a todo - all fields optional"""
+class RecipeUpdate(BaseModel):
+    """Schema for updating a recipe - all fields optional"""
 
     title: Optional[str] = None
     description: Optional[str] = None
-    completed: Optional[bool] = None
+    ingredients: Optional[str] = None
+    instructions: Optional[str] = None
 
 
-class TodoResponse(TodoBase):
-    """What a todo looks like when we send it back to the client"""
+class RecipeResponse(RecipeBase):
+    """What a recipe looks like when we send it back to the client"""
 
     id: int
     created_at: datetime
     updated_at: datetime
 
-    # This tells Pydantic to automatically convert SQLAlchemy models
-    # (like our Todo model) into this Pydantic model
     class Config:
         from_attributes = True
 
+
 # Step 6: Create the FastAPI app
-# This is the main application object - it handles all incoming requests
-app = FastAPI(title="TODO API", description="A simple CRUD API for managing TODO items")
+app = FastAPI(
+    title="Recipe API",
+    description="A simple CRUD API for managing recipe items",
+)
+
 
 # Step 7: Create database tables on startup
-# This automatically creates all tables defined in your SQLAlchemy models
 @app.on_event("startup")
 async def create_tables():
     """
@@ -121,144 +126,149 @@ async def create_tables():
     is ready before this code runs.
     """
     async with engine.begin() as conn:
-        # Use run_sync to run the synchronous create_all method
         await conn.run_sync(Base.metadata.create_all)
     print("✅ Database tables created successfully")
 
+
 # Step 8: Add CORS middleware to allow frontend requests
-# CORS (Cross-Origin Resource Sharing) is needed because your React app
-# runs on a different port (5173) than your API (8000)
-# Without this, browsers would block requests from your frontend
-# Note: In production with combined deployment, CORS may not be needed
-# but we keep it for development flexibility
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins (in production, specify exact URLs)
+    allow_origins=["*"],  # Allows all origins (development-friendly)
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+
 # Step 9: Create our API endpoints
-# These are the URLs that clients can visit to interact with todos
 # IMPORTANT: API routes must be defined BEFORE the SPA catch-all route
 
 
-# READ: Get all todos
-@app.get("/todos", response_model=List[TodoResponse])
-async def get_all_todos(db: AsyncSession = Depends(get_db)):
+# READ: Get all recipes
+@app.get("/recipes", response_model=List[RecipeResponse])
+async def get_all_recipes(db: AsyncSession = Depends(get_db)):
     """
-    Get all todos from the database.
+    Get all recipes from the database.
 
-    Returns: A list of all todos in the database
+    Returns: A list of all recipes in the database
     """
-    result = await db.execute(select(Todo))
-    todos = result.scalars().all()
-    return todos
+    result = await db.execute(select(Recipe))
+    recipes = result.scalars().all()
+    return recipes
 
-# READ: Get a single todo by ID
-@app.get("/todos/{todo_id}", response_model=TodoResponse)
-async def get_todo(todo_id: int, db: AsyncSession = Depends(get_db)):
+
+# READ: Get a single recipe by ID
+@app.get("/recipes/{recipe_id}", response_model=RecipeResponse)
+async def get_recipe(recipe_id: int, db: AsyncSession = Depends(get_db)):
     """
-    Get a single todo by its ID.
+    Get a single recipe by its ID.
 
-    Returns: The todo if found, or a 404 error if not
+    Returns: The recipe if found, or a 404 error if not
     """
-    result = await db.execute(select(Todo).where(Todo.id == todo_id))
-    todo = result.scalar_one_or_none()
+    result = await db.execute(select(Recipe).where(Recipe.id == recipe_id))
+    recipe = result.scalar_one_or_none()
 
-    if todo is None:
-        raise HTTPException(status_code=404, detail=f"Todo with ID {todo_id} not found")
+    if recipe is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Recipe with ID {recipe_id} not found"
+        )
 
-    return todo
-# Step 10: 
-# CREATE: Create a new todo
-@app.post("/todos", response_model=TodoResponse, status_code=201)
-async def create_todo(todo: TodoCreate, db: AsyncSession = Depends(get_db)):
+    return recipe
+
+
+# CREATE: Create a new recipe
+@app.post("/recipes", response_model=RecipeResponse, status_code=201)
+async def create_recipe(recipe: RecipeCreate, db: AsyncSession = Depends(get_db)):
     """
-    Create a new todo item.
+    Create a new recipe.
 
-    Returns: The created todo
+    Returns: The created recipe
     """
-    # Create a new Todo object from the request data
-    db_todo = Todo(
-        title=todo.title,
-        description=todo.description,
-        completed=todo.completed,
+    # Create a new Recipe object from the request data
+    db_recipe = Recipe(
+        title=recipe.title,
+        description=recipe.description,
+        ingredients=recipe.ingredients,
+        instructions=recipe.instructions,
     )
 
-    # Add it to the database session
-    db.add(db_todo)
-    # Commit the transaction to save it
+    # Add and commit to database
+    db.add(db_recipe)
     await db.commit()
-    # Refresh to get the updated data (like the generated ID)
-    await db.refresh(db_todo)
+    await db.refresh(db_recipe)
 
-    return db_todo
-# Step 11: 
-# UPDATE: Update an existing todo (PATCH - partial update)
-@app.patch("/todos/{todo_id}", response_model=TodoResponse)
-async def patch_todo(
-    todo_id: int, todo_update: TodoUpdate, db: AsyncSession = Depends(get_db)
+    return db_recipe
+
+
+# UPDATE: Update an existing recipe (PATCH - partial update)
+@app.patch("/recipes/{recipe_id}", response_model=RecipeResponse)
+async def patch_recipe(
+    recipe_id: int,
+    recipe_update: RecipeUpdate,
+    db: AsyncSession = Depends(get_db)
 ):
     """
-    Partially update an existing todo item (PATCH).
+    Partially update an existing recipe item (PATCH).
     Only the fields provided in the request will be updated.
-    Returns: The updated todo, or a 404 error if not found
+    Returns: The updated recipe, or a 404 error if not found.
     """
-    # Get the existing todo
-    result = await db.execute(select(Todo).where(Todo.id == todo_id))
-    db_todo = result.scalar_one_or_none()
+    result = await db.execute(select(Recipe).where(Recipe.id == recipe_id))
+    db_recipe = result.scalar_one_or_none()
 
-    if db_todo is None:
-        raise HTTPException(status_code=404, detail=f"Todo with ID {todo_id} not found")
+    if db_recipe is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Recipe with ID {recipe_id} not found"
+        )
 
-    # Update only the fields that were provided
-    update_data = todo_update.model_dump(exclude_unset=True)
+    # Update only submitted fields
+    update_data = recipe_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
-        setattr(db_todo, field, value)
+        setattr(db_recipe, field, value)
 
-    # Update the updated_at timestamp
-    db_todo.updated_at = datetime.utcnow()
+    # Update timestamp
+    db_recipe.updated_at = datetime.utcnow()
 
-    # Commit the changes
+    # Commit changes
     await db.commit()
-    await db.refresh(db_todo)
+    await db.refresh(db_recipe)
 
-    return db_todo
-# Step 12: DELETE: Delete a todo
-@app.delete("/todos/{todo_id}", status_code=204)
-async def delete_todo(todo_id: int, db: AsyncSession = Depends(get_db)):
+    return db_recipe
+
+
+# DELETE: Delete a recipe
+@app.delete("/recipes/{recipe_id}", status_code=204)
+async def delete_recipe(recipe_id: int, db: AsyncSession = Depends(get_db)):
     """
-    Delete a todo item.
+    Delete a recipe.
 
-    Returns: 204 No Content if successful, or a 404 error if not found
+    Returns: 204 No Content if successful, or 404 if not found
     """
-    # Get the existing todo
-    result = await db.execute(select(Todo).where(Todo.id == todo_id))
-    db_todo = result.scalar_one_or_none()
+    result = await db.execute(select(Recipe).where(Recipe.id == recipe_id))
+    db_recipe = result.scalar_one_or_none()
 
-    if db_todo is None:
-        raise HTTPException(status_code=404, detail=f"Todo with ID {todo_id} not found")
+    if db_recipe is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Recipe with ID {recipe_id} not found"
+        )
 
-    # Delete it from the database
-    await db.delete(db_todo)
+    await db.delete(db_recipe)
     await db.commit()
 
     return None
+
 # Step 13: Serve static files (frontend) in production
-# This must come AFTER all API routes so API routes are matched first
-# Check if static directory exists (production build)
 static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
 if os.path.exists(static_dir):
-    # Mount static files (CSS, JS, images, etc.)
+
     app.mount(
         "/assets",
         StaticFiles(directory=os.path.join(static_dir, "assets")),
         name="assets",
     )
 
-    # Serve index.html for all non-API routes (SPA routing)
-    # This catch-all route must be last so API routes take precedence
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
         """
@@ -269,16 +279,10 @@ if os.path.exists(static_dir):
         if os.path.exists(index_path):
             return FileResponse(index_path)
         raise HTTPException(status_code=404, detail="Frontend not found")
-# Step 14: Run the server
-# This code only runs if you execute the file directly (not if imported)
+
+
+# Step 14: Run the server (only for direct execution)
 if __name__ == "__main__":
     import uvicorn
 
-    # uvicorn is the web server that runs FastAPI
-    # --reload means it will restart when you change the code
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-# Note: The server will be run in Docker (see Docker Configuration section)
-# If you have Poetry installed locally, you can also run:
-# poetry run uvicorn server:app --reload
