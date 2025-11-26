@@ -31,7 +31,6 @@ from sqlalchemy.orm import sessionmaker
 # Import Base + Recipe model
 from models import Base, Recipe
 
-
 # Step 2: Load environment variables from .env file
 # Looks for .env file in current directory and parent directories
 load_dotenv()
@@ -68,6 +67,7 @@ async def get_db():
         yield session
         # After the endpoint finishes, the session is automatically closed
 
+
 # Step 5: Define what our API requests and responses will look like
 # These are called "Pydantic models" or "schemas"
 # They define the structure of data that will be sent to and from the API
@@ -78,12 +78,13 @@ class RecipeBase(BaseModel):
 
     title: str
     description: Optional[str] = None
-    ingredients: Optional[str] = None      # comma-separated or text block
-    instructions: Optional[str] = None     # full cooking instructions
+    ingredients: Optional[str] = None  # comma-separated or text block
+    instructions: Optional[str] = None  # full cooking instructions
 
 
 class RecipeCreate(RecipeBase):
     """Schema for creating a new recipe"""
+
     pass
 
 
@@ -170,8 +171,7 @@ async def get_recipe(recipe_id: int, db: AsyncSession = Depends(get_db)):
 
     if recipe is None:
         raise HTTPException(
-            status_code=404,
-            detail=f"Recipe with ID {recipe_id} not found"
+            status_code=404, detail=f"Recipe with ID {recipe_id} not found"
         )
 
     return recipe
@@ -204,9 +204,7 @@ async def create_recipe(recipe: RecipeCreate, db: AsyncSession = Depends(get_db)
 # UPDATE: Update an existing recipe (PATCH - partial update)
 @app.patch("/recipes/{recipe_id}", response_model=RecipeResponse)
 async def patch_recipe(
-    recipe_id: int,
-    recipe_update: RecipeUpdate,
-    db: AsyncSession = Depends(get_db)
+    recipe_id: int, recipe_update: RecipeUpdate, db: AsyncSession = Depends(get_db)
 ):
     """
     Partially update an existing recipe item (PATCH).
@@ -218,8 +216,7 @@ async def patch_recipe(
 
     if db_recipe is None:
         raise HTTPException(
-            status_code=404,
-            detail=f"Recipe with ID {recipe_id} not found"
+            status_code=404, detail=f"Recipe with ID {recipe_id} not found"
         )
 
     # Update only submitted fields
@@ -250,14 +247,14 @@ async def delete_recipe(recipe_id: int, db: AsyncSession = Depends(get_db)):
 
     if db_recipe is None:
         raise HTTPException(
-            status_code=404,
-            detail=f"Recipe with ID {recipe_id} not found"
+            status_code=404, detail=f"Recipe with ID {recipe_id} not found"
         )
 
     await db.delete(db_recipe)
     await db.commit()
 
     return None
+
 
 # Step 13: Serve static files (frontend) in production
 static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
@@ -286,3 +283,4 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
+# end of file
