@@ -27,6 +27,8 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
+from fastapi import Query
+
 
 # Import Base + Recipe model
 from models import Base, Recipe
@@ -283,4 +285,44 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
-# end of file
+
+# Get all recipes (with search + sorting)
+@app.get("/recipes", response_model=List[RecipeResponse])
+async def get_all_recipes(
+    q: Optional[str] = Query(None, description="Search recipes by text"),
+    sort: str = Query("newest", description="Sort by 'newest' or 'oldest'"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all recipes with optional search + sorting.
+
+    Searchable fields:
+    - title
+    - description
+    - ingredients
+    """
+
+    query = select(Recipe)
+
+    # SEARCH
+    if q:
+        search = f"%{q}%"
+        query = query.where(
+            Recipe.title.ilike(search) |
+            Recipe.description.ilike(search) |
+            Recipe.ingredients.ilike(search)
+        )
+
+    # SORTING
+    if sort == "newest":
+        query = query.order_by(Recipe.created_at.desc())
+    else:
+        query = query.order_by(Recipe.created_at.asc())
+
+    # Execute 
+    result = await db.execute(query)
+    recipes = result.scalars().all()
+
+    return recipes
+
+    # end of file

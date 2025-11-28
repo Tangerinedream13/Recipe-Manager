@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
     Box,
     Heading,
@@ -15,10 +15,20 @@ import {
     ModalBody,
     ModalFooter,
     Button,
-} from '@chakra-ui/react';
-import { DeleteIcon } from '@chakra-ui/icons';
+    Input,
+    Select
+} from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons";
 
-export default function Recipes({ recipes, onDelete }) {
+export default function Recipes({
+    recipes,
+    onDelete,
+    onSearch,
+    searchQuery,
+    sortOrder,
+    setSearchQuery,
+    setSortOrder
+}) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [recipeToDelete, setRecipeToDelete] = useState(null);
 
@@ -40,10 +50,38 @@ export default function Recipes({ recipes, onDelete }) {
                 Your Recipes
             </Heading>
 
+            {/* Search + Sort Controls */}
+            <Box mb={6} display="flex" gap={4}>
+                <Input
+                    placeholder="Search recipes"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setSearchQuery(value);
+                        onSearch(value, sortOrder);
+                    }}
+                    bg="white"
+                />
+
+                <Select
+                    value={sortOrder}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setSortOrder(value);
+                        onSearch(searchQuery, value);
+                    }}
+                    bg="white"
+                    w="180px"
+                >
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                </Select>
+            </Box>
+
+            {/* Recipe Grid */}
             {recipes.length === 0 ? (
                 <Text color="gray.600">
-                    No recipes yet. Click “Add New Recipe” in the sidebar to
-                    create one.
+                    No recipes found. Try adjusting your search.
                 </Text>
             ) : (
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
@@ -58,7 +96,6 @@ export default function Recipes({ recipes, onDelete }) {
                             borderColor="brand.100"
                             position="relative"
                         >
-                            {/* DELETE BUTTON */}
                             <IconButton
                                 zIndex="10"
                                 icon={<DeleteIcon />}
@@ -87,10 +124,7 @@ export default function Recipes({ recipes, onDelete }) {
                                         <Badge mb={1} colorScheme="orange">
                                             Ingredients
                                         </Badge>
-                                        <Text
-                                            fontSize="sm"
-                                            whiteSpace="pre-wrap"
-                                        >
+                                        <Text fontSize="sm" whiteSpace="pre-wrap">
                                             {recipe.ingredients}
                                         </Text>
                                     </Box>
@@ -101,10 +135,7 @@ export default function Recipes({ recipes, onDelete }) {
                                         <Badge mb={1} colorScheme="orange">
                                             Steps
                                         </Badge>
-                                        <Text
-                                            fontSize="sm"
-                                            whiteSpace="pre-wrap"
-                                        >
+                                        <Text fontSize="sm" whiteSpace="pre-wrap">
                                             {recipe.instructions}
                                         </Text>
                                     </Box>
@@ -115,6 +146,7 @@ export default function Recipes({ recipes, onDelete }) {
                 </SimpleGrid>
             )}
 
+            {/* Delete Confirmation Modal */}
             <Modal isOpen={isOpen} onClose={onClose} isCentered>
                 <ModalOverlay />
                 <ModalContent>
