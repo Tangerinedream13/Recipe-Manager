@@ -17,7 +17,9 @@ import {
     Button,
     Input,
     Select,
-    HStack
+    HStack,
+    InputGroup,
+    InputRightElement
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 
@@ -35,17 +37,44 @@ export default function Recipes({
 }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [recipeToDelete, setRecipeToDelete] = useState(null);
+    const [plannerOpen, setPlannerOpen] = useState(false);
+    const [selectedRecipe, setSelectedRecipe] = useState(null);
+    const [selectedDate, setSelectedDate] = useState("");
 
+    // Open delete modal
     const handleOpenModal = (id) => {
         setRecipeToDelete(id);
         onOpen();
     };
 
+    // Open meal planner date picker
+    const openPlanner = (recipe) => {
+        setSelectedRecipe(recipe);
+        setPlannerOpen(true);
+    };
+
+    // Confirm recipe delete
     const handleConfirmDelete = () => {
         if (recipeToDelete) {
             onDelete(recipeToDelete);
         }
         onClose();
+    };
+
+    // Confirm plan meal assignment
+    const assignMeal = async () => {
+        if (!selectedDate) return;
+
+        await fetch(
+            `http://localhost:8000/recipes/${selectedRecipe.id}/plan?planned_for=${selectedDate}`,
+            { method: "PATCH" }
+        );
+
+        setPlannerOpen(false);
+        setSelectedDate("");
+
+        // refresh results with same search + sorting + page
+        onSearch(searchQuery, sortOrder, page);
     };
 
     return (
@@ -54,7 +83,7 @@ export default function Recipes({
                 Your Recipes
             </Heading>
 
-            {/* Search + Sorting controls */}
+            {/* Search & Sorting controls */}
             <Box mb={6} display="flex" gap={4}>
                 <Input
                     placeholder="Search recipes"
@@ -71,7 +100,7 @@ export default function Recipes({
                 <Select
                     value={sortOrder}
                     bg="white"
-                    w="200px"
+                    w="220px"
                     onChange={(e) => {
                         const value = e.target.value;
                         setSortOrder(value);
@@ -81,8 +110,10 @@ export default function Recipes({
                 >
                     <option value="newest">Newest first</option>
                     <option value="oldest">Oldest first</option>
-                    <option value="az">Title A–Z</option>
-                    <option value="za">Title Z–A</option>
+                    <option value="title-asc">Title A–Z</option>
+                    <option value="title-desc">Title Z–A</option>
+                    <option value="planned">Planned date</option>
+                    <option value="updated">Recently updated</option>
                 </Select>
             </Box>
 
@@ -102,6 +133,7 @@ export default function Recipes({
                             borderColor="brand.100"
                             position="relative"
                         >
+                            {/* Delete button */}
                             <IconButton
                                 icon={<DeleteIcon />}
                                 colorScheme="red"
@@ -145,6 +177,22 @@ export default function Recipes({
                                         </Text>
                                     </Box>
                                 )}
+
+                                {/* Planned date UI */}
+                                {recipe.planned_for && (
+                                    <Badge mt={2} colorScheme="green">
+                                        Planned for: {recipe.planned_for}
+                                    </Badge>
+                                )}
+
+                                {/* Plan Meal Button */}
+                                <Button
+                                    colorScheme="teal"
+                                    size="sm"
+                                    onClick={() => openPlanner(recipe)}
+                                >
+                                    Plan Meal
+                                </Button>
                             </Stack>
                         </Box>
                     ))}
@@ -202,6 +250,36 @@ export default function Recipes({
                         </Button>
                         <Button colorScheme="red" onClick={handleConfirmDelete}>
                             Delete
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* Meal Planner Date Modal */}
+            <Modal isOpen={plannerOpen} onClose={() => setPlannerOpen(false)} isCentered>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Plan Meal</ModalHeader>
+
+                    <ModalBody>
+                        <Text mb={3}>
+                            Select a date to plan:
+                        </Text>
+
+                        <Input
+                            type="date"
+                            bg="white"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                        />
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button variant="ghost" mr={3} onClick={() => setPlannerOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button colorScheme="teal" onClick={assignMeal}>
+                            Save
                         </Button>
                     </ModalFooter>
                 </ModalContent>

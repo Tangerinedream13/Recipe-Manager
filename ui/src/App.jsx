@@ -3,6 +3,7 @@ import { Box, useToast } from '@chakra-ui/react';
 import Layout from './Layout';
 import Recipes from './Recipes';
 import CreateRecipe from './CreateRecipe';
+import MealPlanner from './MealPlanner'; 
 
 const API_URL = 'http://localhost:8000';
 
@@ -119,6 +120,8 @@ export default function App() {
                         setPage={setPage}
                         limit={limit}
                     />
+                ) : activeView === 'planner' ? (         
+                    <MealPlanner recipes={recipes} />    
                 ) : (
                     <CreateRecipe onSave={handleAddRecipe} />
                 )}
