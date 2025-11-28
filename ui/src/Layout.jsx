@@ -21,7 +21,7 @@ export default function Layout({ activeView, onChangeView, children }) {
                 p={6}
             >
                 <Heading size="md" mb={1}>
-                    Recipe Manager
+                    Maria's Italian Recipe Book
                 </Heading>
                 <Text fontSize="sm" mb={6} color="brand.100">
                     Tuscan kitchen vibes 🌿

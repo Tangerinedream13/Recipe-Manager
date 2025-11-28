@@ -12,19 +12,19 @@ import {
 } from '@chakra-ui/react';
 
 export default function CreateRecipe({ onSave }) {
-    const [name, setName] = useState('');
+    const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [ingredients, setIngredients] = useState('');
-    const [steps, setSteps] = useState('');
+    const [instructions, setInstructions] = useState('');
 
     const toast = useToast();
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (!name.trim()) {
+        if (!title.trim()) {
             toast({
-                title: 'Recipe needs a name',
+                title: 'Recipe needs a title',
                 status: 'warning',
                 duration: 2000,
                 isClosable: true,
@@ -32,12 +32,12 @@ export default function CreateRecipe({ onSave }) {
             return;
         }
 
-        onSave({ name, description, ingredients, steps });
+        onSave({ title, description, ingredients, instructions });
 
-        setName('');
+        setTitle('');
         setDescription('');
         setIngredients('');
-        setSteps('');
+        setInstructions('');
 
         toast({
             title: 'Recipe saved',
@@ -64,10 +64,10 @@ export default function CreateRecipe({ onSave }) {
             <form onSubmit={handleSubmit}>
                 <Stack spacing={5}>
                     <FormControl isRequired>
-                        <FormLabel>Recipe Name</FormLabel>
+                        <FormLabel>Title</FormLabel>
                         <Input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
                             placeholder="Chicken Alfredo"
                             bg="brand.50"
                         />
@@ -96,10 +96,12 @@ export default function CreateRecipe({ onSave }) {
                     </FormControl>
 
                     <FormControl>
-                        <FormLabel>Steps</FormLabel>
+                        <FormLabel>Instructions</FormLabel>
                         <Textarea
-                            value={steps}
-                            onChange={(e) => setSteps(e.target.value)}
+                            value={instructions}
+                            onChange={(e) =>
+                                setInstructions(e.target.value)
+                            }
                             placeholder={'1. Boil pasta\n2. Make sauce...'}
                             rows={4}
                             bg="brand.50"

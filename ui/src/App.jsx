@@ -30,11 +30,9 @@ export default function App() {
             try {
                 const res = await fetch(`${API_URL}/recipes`);
                 const data = await res.json();
-
-                // If backend has recipes, replace placeholder
-                if (data.length > 0) {
+                
                     setRecipes(data);
-                }
+            
             } catch (err) {
                 toast({
                     title: 'Failed to load recipes',
@@ -55,10 +53,10 @@ export default function App() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title: recipe.name,
+                    title: recipe.title,
                     description: recipe.description,
                     ingredients: recipe.ingredients,
-                    instructions: recipe.steps,
+                    instructions: recipe.instructions,
                 }),
             });
 
@@ -66,7 +64,6 @@ export default function App() {
 
             const savedRecipe = await res.json();
 
-            // Prepend new recipe
             setRecipes((prev) => [savedRecipe, ...prev]);
 
             toast({
@@ -87,11 +84,39 @@ export default function App() {
         }
     };
 
+    const handleDeleteRecipe = async (id) => {
+        try {
+            const res = await fetch(`${API_URL}/recipes/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (!res.ok) throw new Error('Failed to delete recipe');
+
+            // Remove recipe from state
+            setRecipes((prev) => prev.filter((r) => r.id !== id));
+
+            toast({
+                title: 'Recipe deleted',
+                status: 'info',
+                duration: 2000,
+                isClosable: true,
+            });
+        } catch (err) {
+            toast({
+                title: 'Error deleting recipe',
+                status: 'error',
+                duration: 2000,
+                isClosable: true,
+            });
+        }
+    };
+
+    console.log('Recipes state:', recipes);
     return (
         <Box minH="100vh" bg="brand.50">
             <Layout activeView={activeView} onChangeView={setActiveView}>
                 {activeView === 'recipes' ? (
-                    <Recipes recipes={recipes} />
+                    <Recipes recipes={recipes} onDelete={handleDeleteRecipe} />
                 ) : (
                     <CreateRecipe onSave={handleAddRecipe} />
                 )}

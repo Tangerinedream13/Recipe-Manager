@@ -1,7 +1,39 @@
-import React from 'react';
-import { Box, Heading, SimpleGrid, Text, Stack, Badge } from '@chakra-ui/react';
+import React, { useState } from 'react';
+import {
+    Box,
+    Heading,
+    SimpleGrid,
+    Text,
+    Stack,
+    Badge,
+    IconButton,
+    useDisclosure,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    Button,
+} from '@chakra-ui/react';
+import { DeleteIcon } from '@chakra-ui/icons';
 
-export default function Recipes({ recipes }) {
+export default function Recipes({ recipes, onDelete }) {
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [recipeToDelete, setRecipeToDelete] = useState(null);
+
+    const handleOpenModal = (id) => {
+        setRecipeToDelete(id);
+        onOpen();
+    };
+
+    const handleConfirmDelete = () => {
+        if (recipeToDelete) {
+            onDelete(recipeToDelete);
+        }
+        onClose();
+    };
+
     return (
         <Box>
             <Heading size="lg" mb={6} color="brand.700">
@@ -21,13 +53,27 @@ export default function Recipes({ recipes }) {
                             bg="white"
                             p={6}
                             borderRadius="xl"
-                            boxShadow="sm"
+                            boxShadow="md"
                             borderWidth="1px"
                             borderColor="brand.100"
+                            position="relative"
                         >
-                            <Stack spacing={3}>
+                            {/* DELETE BUTTON */}
+                            <IconButton
+                                zIndex="10"
+                                icon={<DeleteIcon />}
+                                colorScheme="red"
+                                size="sm"
+                                position="absolute"
+                                top="10px"
+                                right="10px"
+                                onClick={() => handleOpenModal(recipe.id)}
+                                aria-label="Delete recipe"
+                            />
+
+                            <Stack spacing={3} mt={4}>
                                 <Heading size="md" color="brand.700">
-                                    {recipe.name}
+                                    {recipe.title}
                                 </Heading>
 
                                 {recipe.description && (
@@ -50,7 +96,7 @@ export default function Recipes({ recipes }) {
                                     </Box>
                                 )}
 
-                                {recipe.steps && (
+                                {recipe.instructions && (
                                     <Box>
                                         <Badge mb={1} colorScheme="orange">
                                             Steps
@@ -59,7 +105,7 @@ export default function Recipes({ recipes }) {
                                             fontSize="sm"
                                             whiteSpace="pre-wrap"
                                         >
-                                            {recipe.steps}
+                                            {recipe.instructions}
                                         </Text>
                                     </Box>
                                 )}
@@ -68,6 +114,26 @@ export default function Recipes({ recipes }) {
                     ))}
                 </SimpleGrid>
             )}
+
+            <Modal isOpen={isOpen} onClose={onClose} isCentered>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Delete Recipe?</ModalHeader>
+                    <ModalBody>
+                        Are you sure you want to permanently remove this recipe?
+                        This action cannot be undone.
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button variant="ghost" mr={3} onClick={onClose}>
+                            Cancel
+                        </Button>
+                        <Button colorScheme="red" onClick={handleConfirmDelete}>
+                            Delete
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }
