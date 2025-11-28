@@ -58,7 +58,7 @@ export default function App() {
                     title: recipe.name,
                     description: recipe.description,
                     ingredients: recipe.ingredients,
-                    instructions: recipe.steps, 
+                    instructions: recipe.steps,
                 }),
             });
 
