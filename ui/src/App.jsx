@@ -1,71 +1,75 @@
-import React, { useState, useEffect } from "react";
-import { Box, useToast } from "@chakra-ui/react";
-import Layout from "./Layout";
-import Recipes from "./Recipes";
-import CreateRecipe from "./CreateRecipe";
+import React, { useState, useEffect } from 'react';
+import { Box, useToast } from '@chakra-ui/react';
+import Layout from './Layout';
+import Recipes from './Recipes';
+import CreateRecipe from './CreateRecipe';
 
-const API_URL = "http://localhost:8000";
+const API_URL = 'http://localhost:8000';
 
 export default function App() {
-    const [activeView, setActiveView] = useState("recipes");
+    const [activeView, setActiveView] = useState('recipes');
     const toast = useToast();
-    const [recipes, setRecipes] = useState([]);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [sortOrder, setSortOrder] = useState("newest");
 
-    // Fetch recipes from backend with optional search and sorting
-    const fetchRecipes = async (q = "", sort = "newest") => {
+    const [recipes, setRecipes] = useState([]);
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortOrder, setSortOrder] = useState('newest');
+
+    // Pagination states
+    const [page, setPage] = useState(0);
+    const limit = 10;
+
+    // Fetch recipes from backend
+    const fetchRecipes = async (search = '', sort = 'newest', pageNum = 0) => {
         try {
             const url = `${API_URL}/recipes?q=${encodeURIComponent(
-                q
-            )}&sort=${sort}`;
+                search
+            )}&sort=${sort}&page=${pageNum}&limit=${limit}`;
 
             const res = await fetch(url);
-            if (!res.ok) throw new Error("Failed fetching recipes");
-
             const data = await res.json();
             setRecipes(data);
         } catch (err) {
             toast({
-                title: "Failed to load recipes",
-                status: "error",
+                title: 'Failed to load recipes',
+                status: 'error',
                 duration: 2000,
                 isClosable: true,
             });
         }
     };
 
-    // Load recipes on initial mount
+    // Load recipes on first mount
     useEffect(() => {
-        fetchRecipes();
-    }, []);
+        fetchRecipes(searchQuery, sortOrder, page);
+    }, [page]);
 
     // Add a recipe
     const handleAddRecipe = async (recipe) => {
         try {
             const res = await fetch(`${API_URL}/recipes`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(recipe),
             });
 
-            if (!res.ok) throw new Error("Failed to save recipe");
+            if (!res.ok) throw new Error('Failed to save recipe');
 
             const savedRecipe = await res.json();
             setRecipes((prev) => [savedRecipe, ...prev]);
 
             toast({
-                title: "Recipe added",
-                status: "success",
+                title: 'Recipe added',
+                status: 'success',
                 duration: 2000,
                 isClosable: true,
             });
 
-            setActiveView("recipes");
+            setActiveView('recipes');
         } catch (err) {
             toast({
-                title: "Error saving recipe",
-                status: "error",
+                title: 'Error saving recipe',
+                status: 'error',
                 duration: 2000,
                 isClosable: true,
             });
@@ -76,23 +80,23 @@ export default function App() {
     const handleDeleteRecipe = async (id) => {
         try {
             const res = await fetch(`${API_URL}/recipes/${id}`, {
-                method: "DELETE",
+                method: 'DELETE',
             });
 
-            if (!res.ok) throw new Error("Failed to delete recipe");
+            if (!res.ok) throw new Error('Failed to delete recipe');
 
             setRecipes((prev) => prev.filter((r) => r.id !== id));
 
             toast({
-                title: "Recipe deleted",
-                status: "info",
+                title: 'Recipe deleted',
+                status: 'info',
                 duration: 2000,
                 isClosable: true,
             });
         } catch (err) {
             toast({
-                title: "Error deleting recipe",
-                status: "error",
+                title: 'Error deleting recipe',
+                status: 'error',
                 duration: 2000,
                 isClosable: true,
             });
@@ -102,7 +106,7 @@ export default function App() {
     return (
         <Box minH="100vh" bg="brand.50">
             <Layout activeView={activeView} onChangeView={setActiveView}>
-                {activeView === "recipes" ? (
+                {activeView === 'recipes' ? (
                     <Recipes
                         recipes={recipes}
                         onDelete={handleDeleteRecipe}
@@ -111,6 +115,9 @@ export default function App() {
                         sortOrder={sortOrder}
                         setSearchQuery={setSearchQuery}
                         setSortOrder={setSortOrder}
+                        page={page}
+                        setPage={setPage}
+                        limit={limit}
                     />
                 ) : (
                     <CreateRecipe onSave={handleAddRecipe} />

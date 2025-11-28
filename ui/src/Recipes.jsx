@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Heading,
@@ -16,9 +16,10 @@ import {
     ModalFooter,
     Button,
     Input,
-    Select
-} from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
+    Select,
+    HStack,
+} from '@chakra-ui/react';
+import { DeleteIcon } from '@chakra-ui/icons';
 
 export default function Recipes({
     recipes,
@@ -27,7 +28,10 @@ export default function Recipes({
     searchQuery,
     sortOrder,
     setSearchQuery,
-    setSortOrder
+    setSortOrder,
+    page,
+    setPage,
+    limit,
 }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [recipeToDelete, setRecipeToDelete] = useState(null);
@@ -44,6 +48,11 @@ export default function Recipes({
         onClose();
     };
 
+    // Re-run backend search whenever page changes
+    useEffect(() => {
+        onSearch(searchQuery, sortOrder, page);
+    }, [page]);
+
     return (
         <Box>
             <Heading size="lg" mb={6} color="brand.700">
@@ -58,7 +67,8 @@ export default function Recipes({
                     onChange={(e) => {
                         const value = e.target.value;
                         setSearchQuery(value);
-                        onSearch(value, sortOrder);
+                        onSearch(value, sortOrder, 0);
+                        setPage(0);
                     }}
                     bg="white"
                 />
@@ -68,7 +78,8 @@ export default function Recipes({
                     onChange={(e) => {
                         const value = e.target.value;
                         setSortOrder(value);
-                        onSearch(searchQuery, value);
+                        onSearch(searchQuery, value, 0);
+                        setPage(0);
                     }}
                     bg="white"
                     w="180px"
@@ -124,7 +135,10 @@ export default function Recipes({
                                         <Badge mb={1} colorScheme="orange">
                                             Ingredients
                                         </Badge>
-                                        <Text fontSize="sm" whiteSpace="pre-wrap">
+                                        <Text
+                                            fontSize="sm"
+                                            whiteSpace="pre-wrap"
+                                        >
                                             {recipe.ingredients}
                                         </Text>
                                     </Box>
@@ -135,7 +149,10 @@ export default function Recipes({
                                         <Badge mb={1} colorScheme="orange">
                                             Steps
                                         </Badge>
-                                        <Text fontSize="sm" whiteSpace="pre-wrap">
+                                        <Text
+                                            fontSize="sm"
+                                            whiteSpace="pre-wrap"
+                                        >
                                             {recipe.instructions}
                                         </Text>
                                     </Box>
@@ -145,6 +162,37 @@ export default function Recipes({
                     ))}
                 </SimpleGrid>
             )}
+
+            {/* Pagination */}
+            <HStack mt={10} spacing={6} justifyContent="center">
+                <Button
+                    colorScheme="orange"
+                    variant="solid"
+                    size="md"
+                    borderRadius="full"
+                    px={6}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    isDisabled={page === 0}
+                >
+                    Previous
+                </Button>
+
+                <Text fontWeight="medium" color="gray.700">
+                    Page {page + 1}
+                </Text>
+
+                <Button
+                    colorScheme="orange"
+                    variant="solid"
+                    size="md"
+                    borderRadius="full"
+                    px={6}
+                    onClick={() => setPage((p) => p + 1)}
+                    isDisabled={recipes.length < limit}
+                >
+                    Next
+                </Button>
+            </HStack>
 
             {/* Delete Confirmation Modal */}
             <Modal isOpen={isOpen} onClose={onClose} isCentered>
