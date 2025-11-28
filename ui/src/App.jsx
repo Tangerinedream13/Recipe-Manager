@@ -1,122 +1,117 @@
-import React, { useState, useEffect } from 'react';
-import { Box, useToast } from '@chakra-ui/react';
-import Layout from './Layout';
-import Recipes from './Recipes';
-import CreateRecipe from './CreateRecipe';
+import React, { useState, useEffect } from "react";
+import { Box, useToast } from "@chakra-ui/react";
+import Layout from "./Layout";
+import Recipes from "./Recipes";
+import CreateRecipe from "./CreateRecipe";
 
-const API_URL = 'http://localhost:8000';
+const API_URL = "http://localhost:8000";
 
 export default function App() {
-    const [activeView, setActiveView] = useState('recipes');
+    const [activeView, setActiveView] = useState("recipes");
     const toast = useToast();
+    const [recipes, setRecipes] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortOrder, setSortOrder] = useState("newest");
 
-    // Placeholder recipe
-    const [recipes, setRecipes] = useState([
-        {
-            id: 'placeholder-1',
-            title: 'Chicken Alfredo',
-            description:
-                'A creamy Italian classic with fettuccine and parmesan.',
-            ingredients:
-                '2 cups pasta\n1 cup cream\n1/2 cup parmesan\n2 tbsp butter',
-            instructions:
-                '1. Boil pasta\n2. Make sauce\n3. Toss together and serve warm.',
-        },
-    ]);
+    // Fetch recipes from backend with optional search and sorting
+    const fetchRecipes = async (q = "", sort = "newest") => {
+        try {
+            const url = `${API_URL}/recipes?q=${encodeURIComponent(
+                q
+            )}&sort=${sort}`;
 
-    // Load recipes from backend
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Failed fetching recipes");
+
+            const data = await res.json();
+            setRecipes(data);
+        } catch (err) {
+            toast({
+                title: "Failed to load recipes",
+                status: "error",
+                duration: 2000,
+                isClosable: true,
+            });
+        }
+    };
+
+    // Load recipes on initial mount
     useEffect(() => {
-        const fetchRecipes = async () => {
-            try {
-                const res = await fetch(`${API_URL}/recipes`);
-                const data = await res.json();
-                
-                    setRecipes(data);
-            
-            } catch (err) {
-                toast({
-                    title: 'Failed to load recipes',
-                    status: 'error',
-                    duration: 2000,
-                    isClosable: true,
-                });
-            }
-        };
-
         fetchRecipes();
     }, []);
 
-    // Add a recipe to the backend
+    // Add a recipe
     const handleAddRecipe = async (recipe) => {
         try {
             const res = await fetch(`${API_URL}/recipes`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: recipe.title,
-                    description: recipe.description,
-                    ingredients: recipe.ingredients,
-                    instructions: recipe.instructions,
-                }),
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(recipe),
             });
 
-            if (!res.ok) throw new Error('Failed to save recipe');
+            if (!res.ok) throw new Error("Failed to save recipe");
 
             const savedRecipe = await res.json();
-
             setRecipes((prev) => [savedRecipe, ...prev]);
 
             toast({
-                title: 'Recipe added!',
-                status: 'success',
+                title: "Recipe added",
+                status: "success",
                 duration: 2000,
                 isClosable: true,
             });
 
-            setActiveView('recipes');
+            setActiveView("recipes");
         } catch (err) {
             toast({
-                title: 'Error saving recipe',
-                status: 'error',
+                title: "Error saving recipe",
+                status: "error",
                 duration: 2000,
                 isClosable: true,
             });
         }
     };
 
+    // Delete a recipe
     const handleDeleteRecipe = async (id) => {
         try {
             const res = await fetch(`${API_URL}/recipes/${id}`, {
-                method: 'DELETE',
+                method: "DELETE",
             });
 
-            if (!res.ok) throw new Error('Failed to delete recipe');
+            if (!res.ok) throw new Error("Failed to delete recipe");
 
-            // Remove recipe from state
             setRecipes((prev) => prev.filter((r) => r.id !== id));
 
             toast({
-                title: 'Recipe deleted',
-                status: 'info',
+                title: "Recipe deleted",
+                status: "info",
                 duration: 2000,
                 isClosable: true,
             });
         } catch (err) {
             toast({
-                title: 'Error deleting recipe',
-                status: 'error',
+                title: "Error deleting recipe",
+                status: "error",
                 duration: 2000,
                 isClosable: true,
             });
         }
     };
 
-    console.log('Recipes state:', recipes);
     return (
         <Box minH="100vh" bg="brand.50">
             <Layout activeView={activeView} onChangeView={setActiveView}>
-                {activeView === 'recipes' ? (
-                    <Recipes recipes={recipes} onDelete={handleDeleteRecipe} />
+                {activeView === "recipes" ? (
+                    <Recipes
+                        recipes={recipes}
+                        onDelete={handleDeleteRecipe}
+                        onSearch={fetchRecipes}
+                        searchQuery={searchQuery}
+                        sortOrder={sortOrder}
+                        setSearchQuery={setSearchQuery}
+                        setSortOrder={setSortOrder}
+                    />
                 ) : (
                     <CreateRecipe onSave={handleAddRecipe} />
                 )}
