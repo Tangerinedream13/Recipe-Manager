@@ -14,7 +14,7 @@ Each Recipe has:
 - updated_at: timestamp when the recipe was last updated
 """
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import Column, Date, DateTime, Integer, String, Text
 from sqlalchemy.sql import func
 
 from .base import Base
@@ -38,6 +38,9 @@ class Recipe(Base):
     description = Column(Text, nullable=True)
     ingredients = Column(Text, nullable=True)
     instructions = Column(Text, nullable=True)
+
+    # Optional meal-planning date (YYYY-MM-DD)
+    planned_for = Column(Date, nullable=True)
 
     # Timestamps
     created_at = Column(

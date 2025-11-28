@@ -15,7 +15,7 @@ HOW IT WORKS:
 
 # Step 1: Import what we need
 import os
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional
 
 from dotenv import load_dotenv
@@ -72,6 +72,7 @@ class RecipeBase(BaseModel):
     description: Optional[str] = None
     ingredients: Optional[str] = None
     instructions: Optional[str] = None
+    planned_for: Optional[date] = None  # new field
 
 
 class RecipeCreate(RecipeBase):
@@ -85,6 +86,7 @@ class RecipeUpdate(BaseModel):
     description: Optional[str] = None
     ingredients: Optional[str] = None
     instructions: Optional[str] = None
+    planned_for: Optional[date] = None  # new field
 
 
 class RecipeResponse(RecipeBase):
@@ -134,7 +136,7 @@ async def get_all_recipes(
     q: Optional[str] = Query(None, description="Search recipes by text"),
     sort: str = Query(
         "newest",
-        description="Sort by 'newest', 'oldest', 'title-asc', 'title-desc', or 'updated'"
+        description="Sort by: newest, oldest, title-asc, title-desc, updated, planned-asc, planned-desc"
     ),
     page: int = Query(0, ge=0, description="Page number (0-based)"),
     limit: int = Query(10, ge=1, le=50, description="Recipes per page"),
@@ -154,17 +156,19 @@ async def get_all_recipes(
     - title-asc: alphabetical A→Z
     - title-desc: alphabetical Z→A
     - updated: recently updated first
+    - planned-asc: earliest planned meals first
+    - planned-desc: latest planned meals first
     """
 
     query = select(Recipe)
 
     # SEARCH
     if q:
-        search_str = f"%{q}%"
+        s = f"%{q}%"
         query = query.where(
-            Recipe.title.ilike(search_str) |
-            Recipe.description.ilike(search_str) |
-            Recipe.ingredients.ilike(search_str)
+            Recipe.title.ilike(s) |
+            Recipe.description.ilike(s) |
+            Recipe.ingredients.ilike(s)
         )
 
     # SORTING
@@ -178,6 +182,10 @@ async def get_all_recipes(
         query = query.order_by(Recipe.title.desc())
     elif sort == "updated":
         query = query.order_by(Recipe.updated_at.desc())
+    elif sort == "planned-asc":
+        query = query.order_by(Recipe.planned_for.asc().nulls_last())
+    elif sort == "planned-desc":
+        query = query.order_by(Recipe.planned_for.desc().nulls_last())
     else:
         query = query.order_by(Recipe.created_at.desc())
 
@@ -185,6 +193,7 @@ async def get_all_recipes(
     offset = page * limit
     query = query.offset(offset).limit(limit)
 
+    # Execute
     result = await db.execute(query)
     recipes = result.scalars().all()
 
@@ -218,6 +227,7 @@ async def create_recipe(recipe: RecipeCreate, db: AsyncSession = Depends(get_db)
         description=recipe.description,
         ingredients=recipe.ingredients,
         instructions=recipe.instructions,
+        planned_for=recipe.planned_for,
     )
 
     db.add(db_recipe)
@@ -249,6 +259,31 @@ async def patch_recipe(
     for field, value in update_data.items():
         setattr(db_recipe, field, value)
 
+    db_recipe.updated_at = datetime.utcnow()
+
+    await db.commit()
+    await db.refresh(db_recipe)
+
+    return db_recipe
+
+
+# NEW: PATCH endpoint for planning a recipe
+@app.patch("/recipes/{recipe_id}/plan", response_model=RecipeResponse)
+async def set_recipe_plan(
+    recipe_id: int,
+    planned_for: Optional[date] = Query(None, description="YYYY-MM-DD date to plan this recipe"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Assign or remove a planned cooking date for a recipe.
+    """
+    result = await db.execute(select(Recipe).where(Recipe.id == recipe_id))
+    db_recipe = result.scalar_one_or_none()
+
+    if db_recipe is None:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    db_recipe.planned_for = planned_for
     db_recipe.updated_at = datetime.utcnow()
 
     await db.commit()
