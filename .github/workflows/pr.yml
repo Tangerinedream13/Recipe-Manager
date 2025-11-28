@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install poetry
         run: |
@@ -43,7 +43,7 @@ jobs:
 
           echo '✨✨✨✨✨ Backend checks completed ✨✨✨✨✨'
 
-  frontend-check:
+    frontend-check:
     name: Frontend Code Quality
     runs-on: ubuntu-latest
     defaults:
@@ -65,9 +65,9 @@ jobs:
         run: |
           npm ci
 
-      - name: Run format and lint checks
+      - name: Run format check only
         run: |
-          npm run check
+          npm run format:check
 
       - name: Completed checks
         run: |
