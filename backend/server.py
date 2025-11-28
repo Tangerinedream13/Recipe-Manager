@@ -19,41 +19,36 @@ from datetime import datetime
 from typing import List, Optional
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
-from fastapi import Query
-
 
 # Import Base + Recipe model
 from models import Base, Recipe
 
-# Step 2: Load environment variables from .env file
-# Looks for .env file in current directory and parent directories
+
+# Step 2: Load environment variables
 load_dotenv()
 
 # Step 3: Connect to the database
-# Get DATABASE_URL from environment variable, fallback to local development
-# Format: postgresql+asyncpg://username:password@host:port/database_name
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Create the database engine - this manages the connection pool
-# Think of it as a "factory" that creates database connections
 engine = create_async_engine(DATABASE_URL, echo=False)
 
-# Create a session factory - this creates individual database sessions
-# Each request will get its own session to query the database
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+AsyncSessionLocal = sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
 
 
 # Step 4: Create a function to get database sessions
-# This is called a "dependency" - FastAPI will automatically call this
-# for each request and pass the result to your endpoint functions
 async def get_db():
     """
     Generator function that yields a database session.
@@ -67,32 +62,25 @@ async def get_db():
     """
     async with AsyncSessionLocal() as session:
         yield session
-        # After the endpoint finishes, the session is automatically closed
 
 
-# Step 5: Define what our API requests and responses will look like
-# These are called "Pydantic models" or "schemas"
-# They define the structure of data that will be sent to and from the API
-
+# Step 5: Define our Pydantic models (schemas)
 
 class RecipeBase(BaseModel):
     """Base schema with common fields for recipes"""
-
     title: str
     description: Optional[str] = None
-    ingredients: Optional[str] = None  # comma-separated or text block
-    instructions: Optional[str] = None  # full cooking instructions
+    ingredients: Optional[str] = None
+    instructions: Optional[str] = None
 
 
 class RecipeCreate(RecipeBase):
     """Schema for creating a new recipe"""
-
     pass
 
 
 class RecipeUpdate(BaseModel):
     """Schema for updating a recipe - all fields optional"""
-
     title: Optional[str] = None
     description: Optional[str] = None
     ingredients: Optional[str] = None
@@ -100,8 +88,7 @@ class RecipeUpdate(BaseModel):
 
 
 class RecipeResponse(RecipeBase):
-    """What a recipe looks like when we send it back to the client"""
-
+    """Schema returned to the client"""
     id: int
     created_at: datetime
     updated_at: datetime
@@ -117,77 +104,115 @@ app = FastAPI(
 )
 
 
-# Step 7: Create database tables on startup
+# Step 7: Create tables on startup
 @app.on_event("startup")
 async def create_tables():
     """
     Create all database tables on application startup.
-    This uses SQLAlchemy to generate tables from your model definitions.
-    Works for both Docker and Railway databases.
-
-    Note: Docker Compose's depends_on: service_healthy ensures the database
-    is ready before this code runs.
+    Ensures tables exist whether running locally or in Docker.
     """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("✅ Database tables created successfully")
+    print("Database tables created successfully")
 
 
-# Step 8: Add CORS middleware to allow frontend requests
+# Step 8: Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins (development-friendly)
+    allow_origins=["*"],  # Development-friendly
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Step 9: Create our API endpoints
-# IMPORTANT: API routes must be defined BEFORE the SPA catch-all route
+# Step 9: API endpoints
 
-
-# READ: Get all recipes
+# READ: Get all recipes (with search, sorting, pagination)
 @app.get("/recipes", response_model=List[RecipeResponse])
-async def get_all_recipes(db: AsyncSession = Depends(get_db)):
+async def get_all_recipes(
+    q: Optional[str] = Query(None, description="Search recipes by text"),
+    sort: str = Query(
+        "newest",
+        description="Sort by 'newest', 'oldest', 'title-asc', 'title-desc', or 'updated'"
+    ),
+    page: int = Query(0, ge=0, description="Page number (0-based)"),
+    limit: int = Query(10, ge=1, le=50, description="Recipes per page"),
+    db: AsyncSession = Depends(get_db)
+):
     """
-    Get all recipes from the database.
+    Get all recipes with search, sorting, and pagination.
 
-    Returns: A list of all recipes in the database
+    Searchable fields:
+    - title
+    - description
+    - ingredients
+
+    Sorting:
+    - newest: created_at desc
+    - oldest: created_at asc
+    - title-asc: alphabetical A→Z
+    - title-desc: alphabetical Z→A
+    - updated: recently updated first
     """
-    result = await db.execute(select(Recipe))
+
+    query = select(Recipe)
+
+    # SEARCH
+    if q:
+        search_str = f"%{q}%"
+        query = query.where(
+            Recipe.title.ilike(search_str) |
+            Recipe.description.ilike(search_str) |
+            Recipe.ingredients.ilike(search_str)
+        )
+
+    # SORTING
+    if sort == "newest":
+        query = query.order_by(Recipe.created_at.desc())
+    elif sort == "oldest":
+        query = query.order_by(Recipe.created_at.asc())
+    elif sort == "title-asc":
+        query = query.order_by(Recipe.title.asc())
+    elif sort == "title-desc":
+        query = query.order_by(Recipe.title.desc())
+    elif sort == "updated":
+        query = query.order_by(Recipe.updated_at.desc())
+    else:
+        query = query.order_by(Recipe.created_at.desc())
+
+    # PAGINATION
+    offset = page * limit
+    query = query.offset(offset).limit(limit)
+
+    result = await db.execute(query)
     recipes = result.scalars().all()
+
     return recipes
 
 
-# READ: Get a single recipe by ID
+# READ: Get single recipe
 @app.get("/recipes/{recipe_id}", response_model=RecipeResponse)
 async def get_recipe(recipe_id: int, db: AsyncSession = Depends(get_db)):
     """
     Get a single recipe by its ID.
-
-    Returns: The recipe if found, or a 404 error if not
+    Returns 404 if not found.
     """
     result = await db.execute(select(Recipe).where(Recipe.id == recipe_id))
     recipe = result.scalar_one_or_none()
 
     if recipe is None:
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {recipe_id} not found"
-        )
+        raise HTTPException(status_code=404, detail="Recipe not found")
 
     return recipe
 
 
-# CREATE: Create a new recipe
+# CREATE: Add a new recipe
 @app.post("/recipes", response_model=RecipeResponse, status_code=201)
 async def create_recipe(recipe: RecipeCreate, db: AsyncSession = Depends(get_db)):
     """
-    Create a new recipe.
-
-    Returns: The created recipe
+    Create a new recipe record.
     """
-    # Create a new Recipe object from the request data
     db_recipe = Recipe(
         title=recipe.title,
         description=recipe.description,
@@ -195,7 +220,6 @@ async def create_recipe(recipe: RecipeCreate, db: AsyncSession = Depends(get_db)
         instructions=recipe.instructions,
     )
 
-    # Add and commit to database
     db.add(db_recipe)
     await db.commit()
     await db.refresh(db_recipe)
@@ -203,54 +227,47 @@ async def create_recipe(recipe: RecipeCreate, db: AsyncSession = Depends(get_db)
     return db_recipe
 
 
-# UPDATE: Update an existing recipe (PATCH - partial update)
+# UPDATE: Patch a recipe
 @app.patch("/recipes/{recipe_id}", response_model=RecipeResponse)
 async def patch_recipe(
-    recipe_id: int, recipe_update: RecipeUpdate, db: AsyncSession = Depends(get_db)
+    recipe_id: int,
+    recipe_update: RecipeUpdate,
+    db: AsyncSession = Depends(get_db)
 ):
     """
-    Partially update an existing recipe item (PATCH).
-    Only the fields provided in the request will be updated.
-    Returns: The updated recipe, or a 404 error if not found.
+    Partially update an existing recipe.
+    Only fields provided will be updated.
     """
     result = await db.execute(select(Recipe).where(Recipe.id == recipe_id))
     db_recipe = result.scalar_one_or_none()
 
     if db_recipe is None:
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {recipe_id} not found"
-        )
+        raise HTTPException(status_code=404, detail="Recipe not found")
 
-    # Update only submitted fields
     update_data = recipe_update.model_dump(exclude_unset=True)
+
     for field, value in update_data.items():
         setattr(db_recipe, field, value)
 
-    # Update timestamp
     db_recipe.updated_at = datetime.utcnow()
 
-    # Commit changes
     await db.commit()
     await db.refresh(db_recipe)
 
     return db_recipe
 
 
-# DELETE: Delete a recipe
+# DELETE: Remove a recipe
 @app.delete("/recipes/{recipe_id}", status_code=204)
 async def delete_recipe(recipe_id: int, db: AsyncSession = Depends(get_db)):
     """
-    Delete a recipe.
-
-    Returns: 204 No Content if successful, or 404 if not found
+    Delete a recipe from the database.
     """
     result = await db.execute(select(Recipe).where(Recipe.id == recipe_id))
     db_recipe = result.scalar_one_or_none()
 
     if db_recipe is None:
-        raise HTTPException(
-            status_code=404, detail=f"Recipe with ID {recipe_id} not found"
-        )
+        raise HTTPException(status_code=404, detail="Recipe not found")
 
     await db.delete(db_recipe)
     await db.commit()
@@ -258,7 +275,7 @@ async def delete_recipe(recipe_id: int, db: AsyncSession = Depends(get_db)):
     return None
 
 
-# Step 13: Serve static files (frontend) in production
+# Step 13: Serve static files (frontend)
 static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
 if os.path.exists(static_dir):
 
@@ -272,57 +289,17 @@ if os.path.exists(static_dir):
     async def serve_spa(full_path: str):
         """
         Serve the React app for all non-API routes.
-        This allows React Router to handle client-side routing.
+        Allows React Router to handle navigation.
         """
         index_path = os.path.join(static_dir, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
+
         raise HTTPException(status_code=404, detail="Frontend not found")
 
 
-# Step 14: Run the server (only for direct execution)
+# Step 14: Run directly (dev mode)
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-# Get all recipes (with search + sorting)
-@app.get("/recipes", response_model=List[RecipeResponse])
-async def get_all_recipes(
-    q: Optional[str] = Query(None, description="Search recipes by text"),
-    sort: str = Query("newest", description="Sort by 'newest' or 'oldest'"),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Get all recipes with optional search + sorting.
-
-    Searchable fields:
-    - title
-    - description
-    - ingredients
-    """
-
-    query = select(Recipe)
-
-    # SEARCH
-    if q:
-        search = f"%{q}%"
-        query = query.where(
-            Recipe.title.ilike(search) |
-            Recipe.description.ilike(search) |
-            Recipe.ingredients.ilike(search)
-        )
-
-    # SORTING
-    if sort == "newest":
-        query = query.order_by(Recipe.created_at.desc())
-    else:
-        query = query.order_by(Recipe.created_at.asc())
-
-    # Execute 
-    result = await db.execute(query)
-    recipes = result.scalars().all()
-
-    return recipes
-
-    # end of file

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import {
     Box,
     Heading,
@@ -17,9 +17,9 @@ import {
     Button,
     Input,
     Select,
-    HStack,
-} from '@chakra-ui/react';
-import { DeleteIcon } from '@chakra-ui/icons';
+    HStack
+} from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons";
 
 export default function Recipes({
     recipes,
@@ -31,7 +31,7 @@ export default function Recipes({
     setSortOrder,
     page,
     setPage,
-    limit,
+    limit
 }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [recipeToDelete, setRecipeToDelete] = useState(null);
@@ -48,52 +48,47 @@ export default function Recipes({
         onClose();
     };
 
-    // Re-run backend search whenever page changes
-    useEffect(() => {
-        onSearch(searchQuery, sortOrder, page);
-    }, [page]);
-
     return (
         <Box>
             <Heading size="lg" mb={6} color="brand.700">
                 Your Recipes
             </Heading>
 
-            {/* Search + Sort Controls */}
+            {/* Search + Sorting controls */}
             <Box mb={6} display="flex" gap={4}>
                 <Input
                     placeholder="Search recipes"
                     value={searchQuery}
+                    bg="white"
                     onChange={(e) => {
                         const value = e.target.value;
                         setSearchQuery(value);
-                        onSearch(value, sortOrder, 0);
                         setPage(0);
+                        onSearch(value, sortOrder, 0);
                     }}
-                    bg="white"
                 />
 
                 <Select
                     value={sortOrder}
+                    bg="white"
+                    w="200px"
                     onChange={(e) => {
                         const value = e.target.value;
                         setSortOrder(value);
-                        onSearch(searchQuery, value, 0);
                         setPage(0);
+                        onSearch(searchQuery, value, 0);
                     }}
-                    bg="white"
-                    w="180px"
                 >
                     <option value="newest">Newest first</option>
                     <option value="oldest">Oldest first</option>
+                    <option value="az">Title A–Z</option>
+                    <option value="za">Title Z–A</option>
                 </Select>
             </Box>
 
             {/* Recipe Grid */}
             {recipes.length === 0 ? (
-                <Text color="gray.600">
-                    No recipes found. Try adjusting your search.
-                </Text>
+                <Text color="gray.600">No recipes found.</Text>
             ) : (
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                     {recipes.map((recipe) => (
@@ -108,15 +103,14 @@ export default function Recipes({
                             position="relative"
                         >
                             <IconButton
-                                zIndex="10"
                                 icon={<DeleteIcon />}
                                 colorScheme="red"
                                 size="sm"
                                 position="absolute"
                                 top="10px"
                                 right="10px"
+                                zIndex="10"
                                 onClick={() => handleOpenModal(recipe.id)}
-                                aria-label="Delete recipe"
                             />
 
                             <Stack spacing={3} mt={4}>
@@ -135,10 +129,7 @@ export default function Recipes({
                                         <Badge mb={1} colorScheme="orange">
                                             Ingredients
                                         </Badge>
-                                        <Text
-                                            fontSize="sm"
-                                            whiteSpace="pre-wrap"
-                                        >
+                                        <Text fontSize="sm" whiteSpace="pre-wrap">
                                             {recipe.ingredients}
                                         </Text>
                                     </Box>
@@ -149,10 +140,7 @@ export default function Recipes({
                                         <Badge mb={1} colorScheme="orange">
                                             Steps
                                         </Badge>
-                                        <Text
-                                            fontSize="sm"
-                                            whiteSpace="pre-wrap"
-                                        >
+                                        <Text fontSize="sm" whiteSpace="pre-wrap">
                                             {recipe.instructions}
                                         </Text>
                                     </Box>
@@ -163,47 +151,51 @@ export default function Recipes({
                 </SimpleGrid>
             )}
 
-            {/* Pagination */}
+            {/* Pagination Controls */}
             <HStack mt={10} spacing={6} justifyContent="center">
                 <Button
                     colorScheme="orange"
                     variant="solid"
-                    size="md"
                     borderRadius="full"
                     px={6}
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    onClick={() => {
+                        const newPage = Math.max(0, page - 1);
+                        setPage(newPage);
+                        onSearch(searchQuery, sortOrder, newPage);
+                    }}
                     isDisabled={page === 0}
                 >
                     Previous
                 </Button>
 
-                <Text fontWeight="medium" color="gray.700">
+                <Text fontWeight="semibold" color="gray.700">
                     Page {page + 1}
                 </Text>
 
                 <Button
                     colorScheme="orange"
                     variant="solid"
-                    size="md"
                     borderRadius="full"
                     px={6}
-                    onClick={() => setPage((p) => p + 1)}
+                    onClick={() => {
+                        const newPage = page + 1;
+                        setPage(newPage);
+                        onSearch(searchQuery, sortOrder, newPage);
+                    }}
                     isDisabled={recipes.length < limit}
                 >
                     Next
                 </Button>
             </HStack>
 
-            {/* Delete Confirmation Modal */}
+            {/* Delete Modal */}
             <Modal isOpen={isOpen} onClose={onClose} isCentered>
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader>Delete Recipe?</ModalHeader>
                     <ModalBody>
                         Are you sure you want to permanently remove this recipe?
-                        This action cannot be undone.
                     </ModalBody>
-
                     <ModalFooter>
                         <Button variant="ghost" mr={3} onClick={onClose}>
                             Cancel
