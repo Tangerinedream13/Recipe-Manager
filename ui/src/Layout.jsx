@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
     Flex,
     Box,
@@ -7,7 +7,7 @@ import {
     Button,
     VStack,
     Divider,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react';
 
 export default function Layout({ activeView, onChangeView, children }) {
     return (
@@ -15,7 +15,7 @@ export default function Layout({ activeView, onChangeView, children }) {
             {/* Sidebar */}
             <Box
                 as="aside"
-                w={{ base: "220px", md: "260px" }}
+                w={{ base: '220px', md: '260px' }}
                 bg="brand.700"
                 color="white"
                 p={6}
@@ -33,19 +33,19 @@ export default function Layout({ activeView, onChangeView, children }) {
 
                 <VStack align="stretch" spacing={3}>
                     <Button
-                        variant={activeView === "recipes" ? "solid" : "ghost"}
+                        variant={activeView === 'recipes' ? 'solid' : 'ghost'}
                         colorScheme="orange"
                         justifyContent="flex-start"
-                        onClick={() => onChangeView("recipes")}
+                        onClick={() => onChangeView('recipes')}
                     >
                         View Recipes
                     </Button>
 
                     <Button
-                        variant={activeView === "create" ? "solid" : "ghost"}
+                        variant={activeView === 'create' ? 'solid' : 'ghost'}
                         colorScheme="orange"
                         justifyContent="flex-start"
-                        onClick={() => onChangeView("create")}
+                        onClick={() => onChangeView('create')}
                     >
                         Add New Recipe
                     </Button>

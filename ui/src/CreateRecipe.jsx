@@ -11,6 +11,8 @@ import {
     useToast,
 } from '@chakra-ui/react';
 
+/* https://chakra-ui.com/docs/components/form-control */
+
 export default function CreateRecipe({ onSave }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');

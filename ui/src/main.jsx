@@ -5,6 +5,7 @@ import App from './App';
 // Chakra UI v2 imports
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 
+// Custom color palette using Chakra UI
 const theme = extendTheme({
     colors: {
         brand: {

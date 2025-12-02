@@ -23,6 +23,9 @@ import {
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
 
+// Portions of the recipe card layout and Chakra UI styling were developed with assistance from ChatGPT.
+// The design direction, customization, and final implementation were completed by Maria Haddon.
+
 export default function Recipes({
     recipes,
     onDelete,
