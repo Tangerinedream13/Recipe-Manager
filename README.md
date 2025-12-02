@@ -1,6 +1,6 @@
-# Project 2: Full-Stack TODO Application
+# Project 2: Full-Stack Recipe Manager Application
 
-A full-stack web application built with FastAPI (backend), React (frontend), and PostgreSQL (database).
+A full-stack web application built with FastAPI (backend), React (frontend), PostgreSQL (database), Docker (containerization).
 
 ## Tech Stack
 
@@ -11,29 +11,44 @@ A full-stack web application built with FastAPI (backend), React (frontend), and
 
 ## Project Structure
 
-
 project02-fall2025/
-├── backend/      # FastAPI application
-├── database/     # Database Dockerfile
-└── ui/           # React application
+├── backend/        # FastAPI backend
+├── database/       # PostgreSQL Dockerfile
+├── ui/             # React frontend (Vite + Chakra UI)
+├── docker-compose.yaml
+├── requirements.txt
+├── package.json
+└── README.md
 
 
 ## Getting Started
+1. Clone the repository 
+   git clone https://github.com/mariahaddon/project02-fall2025
+   cd project02-fall2025
+2. Start all services
+   docker-compose up --build
+3. Access the app
+	•	Frontend (React): http://localhost:5173
+	•	Backend API (FastAPI): http://localhost:8000
+	•	API Docs (Swagger): http://localhost:8000/docs
+   The backend, frontend, and database will automatically start inside Docker.
+4. If you want to run the React app outside Docker
+   Frontend: 
+   cd ui
+   npm install
+   npm run dev
+
+   Backend: 
+   cd backend
+   pip install -r ../requirements.txt
+   uvicorn server:app --reload
+
 
 ### Prerequisites
-
 - Docker Desktop installed and running
+All environment variables are handled inside docker-compose.yaml
+The frontend communicates iwth the backend at http://localhost:8000
 
-### Running the Application
 
-1. Clone this repository
-2. Create a `.env` file in the root directory (see project documentation) with your database connection string.
-3. Run `docker-compose up -d` to start all services
-4. Access the application:
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:8000
-   - API Documentation: http://localhost:8000/docs
 
-## Development
 
-See the project documentation for detailed setup and development instructions.
