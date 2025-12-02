@@ -137,8 +137,16 @@ async def get_all_recipes(
         None,
         description="Search recipes by text"
     ),
+    q: Optional[str] = Query(
+        None,
+        description="Search recipes by text"
+    ),
     sort: str = Query(
         "newest",
+        description=(
+            "Sort by: newest, oldest, title-asc, title-desc, updated, "
+            "planned-asc, planned-desc"
+        ),
         description=(
             "Sort by: newest, oldest, title-asc, title-desc, updated, "
             "planned-asc, planned-desc"
@@ -147,18 +155,6 @@ async def get_all_recipes(
     ),
     page: int = Query(0, ge=0, description="Page number (0-based)"),
     limit: int = Query(10, ge=1, le=50, description="Recipes per page"),
-    db: AsyncSession = Depends(get_db),
-    page: int = Query(
-        0,
-        ge=0,
-        description="Page number (0-based)"
-    ),
-    limit: int = Query(
-        10,
-        ge=1,
-        le=50,
-        description="Recipes per page"
-    ),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -180,6 +176,7 @@ async def get_all_recipes(
     """
 
     query = select(Recipe)
+    
     
     # SEARCH
     if q:
