@@ -29,9 +29,9 @@ jobs:
         run: |
           pip install poetry
 
-      - name: Install python dependencies (in pyproject.toml)
+      - name: Install python dependencies (with dev tools)
         run: |
-          poetry install
+          poetry install --with dev
 
       - name: Check code quality using black, isort, and flake8
         run: |
