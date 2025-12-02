@@ -15,7 +15,7 @@ HOW IT WORKS:
 
 # Step 1: Import what we need
 import os
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import List, Optional
 
 from dotenv import load_dotenv
@@ -24,14 +24,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
 
 # Import Base + Recipe model
 from models import Base, Recipe
-
 
 # Step 2: Load environment variables
 load_dotenv()
@@ -41,11 +39,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 
-AsyncSessionLocal = sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False
-)
+AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 # Step 4: Create a function to get database sessions
@@ -66,8 +60,10 @@ async def get_db():
 
 # Step 5: Define our Pydantic models (schemas)
 
+
 class RecipeBase(BaseModel):
     """Base schema with common fields for recipes"""
+
     title: str
     description: Optional[str] = None
     ingredients: Optional[str] = None
@@ -77,11 +73,13 @@ class RecipeBase(BaseModel):
 
 class RecipeCreate(RecipeBase):
     """Schema for creating a new recipe"""
+
     pass
 
 
 class RecipeUpdate(BaseModel):
     """Schema for updating a recipe - all fields optional"""
+
     title: Optional[str] = None
     description: Optional[str] = None
     ingredients: Optional[str] = None
@@ -91,6 +89,7 @@ class RecipeUpdate(BaseModel):
 
 class RecipeResponse(RecipeBase):
     """Schema returned to the client"""
+
     id: int
     created_at: datetime
     updated_at: datetime
@@ -130,17 +129,18 @@ app.add_middleware(
 
 # Step 9: API endpoints
 
+
 # READ: Get all recipes (with search, sorting, pagination)
 @app.get("/recipes", response_model=List[RecipeResponse])
 async def get_all_recipes(
     q: Optional[str] = Query(None, description="Search recipes by text"),
     sort: str = Query(
         "newest",
-        description="Sort by: newest, oldest, title-asc, title-desc, updated, planned-asc, planned-desc"
+        description="Sort by: newest, oldest, title-asc, title-desc, updated, planned-asc, planned-desc",
     ),
     page: int = Query(0, ge=0, description="Page number (0-based)"),
     limit: int = Query(10, ge=1, le=50, description="Recipes per page"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get all recipes with search, sorting, and pagination.
@@ -166,9 +166,9 @@ async def get_all_recipes(
     if q:
         s = f"%{q}%"
         query = query.where(
-            Recipe.title.ilike(s) |
-            Recipe.description.ilike(s) |
-            Recipe.ingredients.ilike(s)
+            Recipe.title.ilike(s)
+            | Recipe.description.ilike(s)
+            | Recipe.ingredients.ilike(s)
         )
 
     # SORTING
@@ -240,9 +240,7 @@ async def create_recipe(recipe: RecipeCreate, db: AsyncSession = Depends(get_db)
 # UPDATE: Patch a recipe
 @app.patch("/recipes/{recipe_id}", response_model=RecipeResponse)
 async def patch_recipe(
-    recipe_id: int,
-    recipe_update: RecipeUpdate,
-    db: AsyncSession = Depends(get_db)
+    recipe_id: int, recipe_update: RecipeUpdate, db: AsyncSession = Depends(get_db)
 ):
     """
     Partially update an existing recipe.
@@ -271,8 +269,10 @@ async def patch_recipe(
 @app.patch("/recipes/{recipe_id}/plan", response_model=RecipeResponse)
 async def set_recipe_plan(
     recipe_id: int,
-    planned_for: Optional[date] = Query(None, description="YYYY-MM-DD date to plan this recipe"),
-    db: AsyncSession = Depends(get_db)
+    planned_for: Optional[date] = Query(
+        None, description="YYYY-MM-DD date to plan this recipe"
+    ),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Assign or remove a planned cooking date for a recipe.
