@@ -133,10 +133,7 @@ app.add_middleware(
 # READ: Get all recipes (with search, sorting, pagination)
 @app.get("/recipes", response_model=List[RecipeResponse])
 async def get_all_recipes(
-    q: Optional[str] = Query(
-        None,
-        description="Search recipes by text"
-    ),
+    q: Optional[str] = Query(None, description="Search recipes by text"),
     sort: str = Query(
         "newest",
         description=(
@@ -167,7 +164,7 @@ async def get_all_recipes(
     """
 
     query = select(Recipe)
-    
+
     # SEARCH
     if q:
         s = f"%{q}%"
