@@ -101,9 +101,7 @@ export default function CreateRecipe({ onSave }) {
                         <FormLabel>Instructions</FormLabel>
                         <Textarea
                             value={instructions}
-                            onChange={(e) =>
-                                setInstructions(e.target.value)
-                            }
+                            onChange={(e) => setInstructions(e.target.value)}
                             placeholder={'1. Boil pasta\n2. Make sauce...'}
                             rows={4}
                             bg="brand.50"

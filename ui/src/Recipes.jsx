@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
     Box,
     Heading,
@@ -19,9 +19,9 @@ import {
     Select,
     HStack,
     InputGroup,
-    InputRightElement
-} from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
+    InputRightElement,
+} from '@chakra-ui/react';
+import { DeleteIcon } from '@chakra-ui/icons';
 
 // Portions of the recipe card layout and Chakra UI styling were developed with assistance from ChatGPT.
 // The design direction, customization, and final implementation were completed by Maria Haddon.
@@ -36,13 +36,13 @@ export default function Recipes({
     setSortOrder,
     page,
     setPage,
-    limit
+    limit,
 }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [recipeToDelete, setRecipeToDelete] = useState(null);
     const [plannerOpen, setPlannerOpen] = useState(false);
     const [selectedRecipe, setSelectedRecipe] = useState(null);
-    const [selectedDate, setSelectedDate] = useState("");
+    const [selectedDate, setSelectedDate] = useState('');
 
     // Open delete modal
     const handleOpenModal = (id) => {
@@ -70,11 +70,11 @@ export default function Recipes({
 
         await fetch(
             `http://localhost:8000/recipes/${selectedRecipe.id}/plan?planned_for=${selectedDate}`,
-            { method: "PATCH" }
+            { method: 'PATCH' }
         );
 
         setPlannerOpen(false);
-        setSelectedDate("");
+        setSelectedDate('');
 
         // refresh results with same search + sorting + page
         onSearch(searchQuery, sortOrder, page);
@@ -164,7 +164,10 @@ export default function Recipes({
                                         <Badge mb={1} colorScheme="orange">
                                             Ingredients
                                         </Badge>
-                                        <Text fontSize="sm" whiteSpace="pre-wrap">
+                                        <Text
+                                            fontSize="sm"
+                                            whiteSpace="pre-wrap"
+                                        >
                                             {recipe.ingredients}
                                         </Text>
                                     </Box>
@@ -175,7 +178,10 @@ export default function Recipes({
                                         <Badge mb={1} colorScheme="orange">
                                             Steps
                                         </Badge>
-                                        <Text fontSize="sm" whiteSpace="pre-wrap">
+                                        <Text
+                                            fontSize="sm"
+                                            whiteSpace="pre-wrap"
+                                        >
                                             {recipe.instructions}
                                         </Text>
                                     </Box>
@@ -259,15 +265,17 @@ export default function Recipes({
             </Modal>
 
             {/* Meal Planner Date Modal */}
-            <Modal isOpen={plannerOpen} onClose={() => setPlannerOpen(false)} isCentered>
+            <Modal
+                isOpen={plannerOpen}
+                onClose={() => setPlannerOpen(false)}
+                isCentered
+            >
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader>Plan Meal</ModalHeader>
 
                     <ModalBody>
-                        <Text mb={3}>
-                            Select a date to plan:
-                        </Text>
+                        <Text mb={3}>Select a date to plan:</Text>
 
                         <Input
                             type="date"
@@ -278,7 +286,11 @@ export default function Recipes({
                     </ModalBody>
 
                     <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={() => setPlannerOpen(false)}>
+                        <Button
+                            variant="ghost"
+                            mr={3}
+                            onClick={() => setPlannerOpen(false)}
+                        >
                             Cancel
                         </Button>
                         <Button colorScheme="teal" onClick={assignMeal}>
