@@ -18,10 +18,10 @@ import {
     Input,
     Select,
     HStack,
-    InputGroup,
-    InputRightElement,
 } from '@chakra-ui/react';
 import { DeleteIcon } from '@chakra-ui/icons';
+
+import { API_URL } from './App';
 
 // Portions of the recipe card layout and Chakra UI styling were developed with assistance from ChatGPT.
 // The design direction, customization, and final implementation were completed by Maria Haddon.
@@ -44,19 +44,16 @@ export default function Recipes({
     const [selectedRecipe, setSelectedRecipe] = useState(null);
     const [selectedDate, setSelectedDate] = useState('');
 
-    // Open delete modal
     const handleOpenModal = (id) => {
         setRecipeToDelete(id);
         onOpen();
     };
 
-    // Open meal planner date picker
     const openPlanner = (recipe) => {
         setSelectedRecipe(recipe);
         setPlannerOpen(true);
     };
 
-    // Confirm recipe delete
     const handleConfirmDelete = () => {
         if (recipeToDelete) {
             onDelete(recipeToDelete);
@@ -64,19 +61,16 @@ export default function Recipes({
         onClose();
     };
 
-    // Confirm plan meal assignment
     const assignMeal = async () => {
         if (!selectedDate) return;
 
         await fetch(
-            `http://localhost:8000/recipes/${selectedRecipe.id}/plan?planned_for=${selectedDate}`,
+            `${API_URL}/recipes/${selectedRecipe.id}/plan?planned_for=${selectedDate}`,
             { method: 'PATCH' }
         );
 
         setPlannerOpen(false);
         setSelectedDate('');
-
-        // refresh results with same search + sorting + page
         onSearch(searchQuery, sortOrder, page);
     };
 
@@ -86,7 +80,6 @@ export default function Recipes({
                 Your Recipes
             </Heading>
 
-            {/* Search & Sorting controls */}
             <Box mb={6} display="flex" gap={4}>
                 <Input
                     placeholder="Search recipes"
@@ -120,7 +113,6 @@ export default function Recipes({
                 </Select>
             </Box>
 
-            {/* Recipe Grid */}
             {recipes.length === 0 ? (
                 <Text color="gray.600">No recipes found.</Text>
             ) : (
@@ -136,7 +128,6 @@ export default function Recipes({
                             borderColor="brand.100"
                             position="relative"
                         >
-                            {/* Delete button */}
                             <IconButton
                                 icon={<DeleteIcon />}
                                 colorScheme="red"
@@ -187,14 +178,12 @@ export default function Recipes({
                                     </Box>
                                 )}
 
-                                {/* Planned date UI */}
                                 {recipe.planned_for && (
                                     <Badge mt={2} colorScheme="green">
                                         Planned for: {recipe.planned_for}
                                     </Badge>
                                 )}
 
-                                {/* Plan Meal Button */}
                                 <Button
                                     colorScheme="teal"
                                     size="sm"
@@ -208,7 +197,6 @@ export default function Recipes({
                 </SimpleGrid>
             )}
 
-            {/* Pagination Controls */}
             <HStack mt={10} spacing={6} justifyContent="center">
                 <Button
                     colorScheme="orange"
@@ -245,7 +233,6 @@ export default function Recipes({
                 </Button>
             </HStack>
 
-            {/* Delete Modal */}
             <Modal isOpen={isOpen} onClose={onClose} isCentered>
                 <ModalOverlay />
                 <ModalContent>
@@ -264,7 +251,6 @@ export default function Recipes({
                 </ModalContent>
             </Modal>
 
-            {/* Meal Planner Date Modal */}
             <Modal
                 isOpen={plannerOpen}
                 onClose={() => setPlannerOpen(false)}
