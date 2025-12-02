@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
     Box,
     Heading,
@@ -13,19 +13,21 @@ import {
     Select,
     Tooltip,
     useToast,
-    Flex
-} from "@chakra-ui/react";
-import dayjs from "dayjs";
+    Flex,
+} from '@chakra-ui/react';
+import dayjs from 'dayjs';
 
 // Use API_URL from environment or fall back to localhost
 const API_URL =
     import.meta.env.VITE_API_URL !== undefined
         ? import.meta.env.VITE_API_URL
-        : "http://localhost:8000";
+        : 'http://localhost:8000';
 
 export default function MealPlanner() {
     const [recipes, setRecipes] = useState([]);
-    const [weekStart, setWeekStart] = useState(dayjs().startOf("week").add(1, "day"));
+    const [weekStart, setWeekStart] = useState(
+        dayjs().startOf('week').add(1, 'day')
+    );
     const [weekDates, setWeekDates] = useState([]);
     const toast = useToast();
 
@@ -33,7 +35,7 @@ export default function MealPlanner() {
     useEffect(() => {
         const days = [];
         for (let i = 0; i < 7; i++) {
-            days.push(weekStart.add(i, "day"));
+            days.push(weekStart.add(i, 'day'));
         }
         setWeekDates(days);
     }, [weekStart]);
@@ -41,22 +43,24 @@ export default function MealPlanner() {
     // Fetch recipes (sorted by planned date)
     const fetchRecipes = async () => {
         try {
-            const res = await fetch(`${API_URL}/recipes?sort=planned&limit=200`);
+            const res = await fetch(
+                `${API_URL}/recipes?sort=planned&limit=200`
+            );
             const data = await res.json();
 
             // Ensure planned_for is always a string
             const safeData = data.map((r) => ({
                 ...r,
-                planned_for: r.planned_for || ""
+                planned_for: r.planned_for || '',
             }));
 
             setRecipes(safeData);
         } catch {
             toast({
-                title: "Error loading recipes",
-                status: "error",
+                title: 'Error loading recipes',
+                status: 'error',
                 duration: 2000,
-                isClosable: true
+                isClosable: true,
             });
         }
     };
@@ -70,21 +74,21 @@ export default function MealPlanner() {
         try {
             const res = await fetch(
                 `${API_URL}/recipes/${recipeId}/plan?planned_for=${dateStr}`,
-                { method: "PATCH" }
+                { method: 'PATCH' }
             );
 
             if (res.ok) {
                 toast({
-                    title: "Meal planned!",
-                    status: "success",
-                    duration: 1500
+                    title: 'Meal planned!',
+                    status: 'success',
+                    duration: 1500,
                 });
                 fetchRecipes();
             }
         } catch {
             toast({
-                title: "Error assigning meal",
-                status: "error"
+                title: 'Error assigning meal',
+                status: 'error',
             });
         }
     };
@@ -94,16 +98,15 @@ export default function MealPlanner() {
         const meals = recipes.filter((r) => r.planned_for === dateStr);
 
         for (const meal of meals) {
-            await fetch(
-                `${API_URL}/recipes/${meal.id}/plan?planned_for=`,
-                { method: "PATCH" }
-            );
+            await fetch(`${API_URL}/recipes/${meal.id}/plan?planned_for=`, {
+                method: 'PATCH',
+            });
         }
 
         toast({
-            title: "Meals cleared",
-            status: "info",
-            duration: 1500
+            title: 'Meals cleared',
+            status: 'info',
+            duration: 1500,
         });
 
         fetchRecipes();
@@ -117,14 +120,14 @@ export default function MealPlanner() {
             <Flex justify="space-between" mb={4}>
                 <Button
                     colorScheme="orange"
-                    onClick={() => setWeekStart(weekStart.subtract(7, "day"))}
+                    onClick={() => setWeekStart(weekStart.subtract(7, 'day'))}
                 >
                     ← Previous Week
                 </Button>
 
                 <Button
                     colorScheme="orange"
-                    onClick={() => setWeekStart(weekStart.add(7, "day"))}
+                    onClick={() => setWeekStart(weekStart.add(7, 'day'))}
                 >
                     Next Week →
                 </Button>
@@ -133,15 +136,17 @@ export default function MealPlanner() {
             {/* Calendar Grid */}
             <Grid templateColumns="repeat(7, 1fr)" gap={4}>
                 {weekDates.map((d) => {
-                    const dateStr = d.format("YYYY-MM-DD");
-                    const meals = recipes.filter((r) => r.planned_for === dateStr);
+                    const dateStr = d.format('YYYY-MM-DD');
+                    const meals = recipes.filter(
+                        (r) => r.planned_for === dateStr
+                    );
 
                     return (
                         <Card key={dateStr} bg="gray.50" borderRadius="xl">
                             <CardHeader>
-                                <Heading size="md">{d.format("dddd")}</Heading>
+                                <Heading size="md">{d.format('dddd')}</Heading>
                                 <Text color="gray.500" fontSize="sm">
-                                    {d.format("MMM D")}
+                                    {d.format('MMM D')}
                                 </Text>
 
                                 {meals.length > 0 && (
@@ -150,7 +155,9 @@ export default function MealPlanner() {
                                         size="sm"
                                         colorScheme="red"
                                         variant="outline"
-                                        onClick={() => clearMealsForDate(dateStr)}
+                                        onClick={() =>
+                                            clearMealsForDate(dateStr)
+                                        }
                                     >
                                         Clear Meal
                                     </Button>
@@ -204,7 +211,7 @@ export default function MealPlanner() {
 
 // Dropdown to assign meals
 function AssignMealDropdown({ recipes, dateStr, onAssign }) {
-    const [selected, setSelected] = useState("");
+    const [selected, setSelected] = useState('');
 
     return (
         <HStack>

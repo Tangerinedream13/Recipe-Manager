@@ -5,7 +5,7 @@ import { Box, useToast } from '@chakra-ui/react';
 import Layout from './Layout';
 import Recipes from './Recipes';
 import CreateRecipe from './CreateRecipe';
-import MealPlanner from "./MealPlanner";
+import MealPlanner from './MealPlanner';
 
 // Use environment variable for API URL, default to localhost for development
 // In production (Railway), this will be empty string since frontend and backend are same origin
@@ -128,8 +128,8 @@ export default function App() {
                         setPage={setPage}
                         limit={limit}
                     />
-                ) : activeView === 'planner' ? (         
-                    <MealPlanner recipes={recipes} />    
+                ) : activeView === 'planner' ? (
+                    <MealPlanner recipes={recipes} />
                 ) : (
                     <CreateRecipe onSave={handleAddRecipe} />
                 )}
