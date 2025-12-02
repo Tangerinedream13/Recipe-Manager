@@ -1,9 +1,12 @@
-  name: Pull Request Check
+name: Pull Request Check
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
-      - "*"
+      - main
 
 jobs:
   backend-check:
