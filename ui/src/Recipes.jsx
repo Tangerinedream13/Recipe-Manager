@@ -66,7 +66,9 @@ export default function Recipes({
 
         await fetch(
             `${API_URL}/recipes/${selectedRecipe.id}/plan?planned_for=${selectedDate}`,
-            { method: 'PATCH' }
+            {
+                method: 'PATCH',
+            }
         );
 
         setPlannerOpen(false);
