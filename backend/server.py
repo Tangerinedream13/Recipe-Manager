@@ -36,9 +36,7 @@ load_dotenv()
 
 # Step 3: Connect to the database
 DATABASE_URL = os.getenv("DATABASE_URL")
-
 engine = create_async_engine(DATABASE_URL, echo=False)
-
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
@@ -59,8 +57,6 @@ async def get_db():
 
 
 # Step 5: Define our Pydantic models (schemas)
-
-
 class RecipeBase(BaseModel):
     """Base schema with common fields for recipes"""
 
@@ -128,18 +124,12 @@ app.add_middleware(
 
 
 # Step 9: API endpoints
-
-
 # READ: Get all recipes (with search, sorting, pagination)
 @app.get("/recipes", response_model=List[RecipeResponse])
 async def get_all_recipes(
     q: Optional[str] = Query(
         None,
-        description="Search recipes by text"
-    ),
-    q: Optional[str] = Query(
-        None,
-        description="Search recipes by text"
+        description="Search recipes by text",
     ),
     sort: str = Query(
         "newest",
@@ -147,11 +137,6 @@ async def get_all_recipes(
             "Sort by: newest, oldest, title-asc, title-desc, updated, "
             "planned-asc, planned-desc"
         ),
-        description=(
-            "Sort by: newest, oldest, title-asc, title-desc, updated, "
-            "planned-asc, planned-desc"
-        ),
-        description="Sort by: newest, oldest, title-asc, title-desc, updated, planned-asc, planned-desc",
     ),
     page: int = Query(0, ge=0, description="Page number (0-based)"),
     limit: int = Query(10, ge=1, le=50, description="Recipes per page"),
@@ -176,8 +161,7 @@ async def get_all_recipes(
     """
 
     query = select(Recipe)
-    
-    
+
     # SEARCH
     if q:
         s = f"%{q}%"
@@ -209,10 +193,8 @@ async def get_all_recipes(
     offset = page * limit
     query = query.offset(offset).limit(limit)
 
-    # Execute
     result = await db.execute(query)
     recipes = result.scalars().all()
-
     return recipes
 
 
@@ -256,7 +238,9 @@ async def create_recipe(recipe: RecipeCreate, db: AsyncSession = Depends(get_db)
 # UPDATE: Patch a recipe
 @app.patch("/recipes/{recipe_id}", response_model=RecipeResponse)
 async def patch_recipe(
-    recipe_id: int, recipe_update: RecipeUpdate, db: AsyncSession = Depends(get_db)
+    recipe_id: int,
+    recipe_update: RecipeUpdate,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Partially update an existing recipe.
@@ -286,7 +270,8 @@ async def patch_recipe(
 async def set_recipe_plan(
     recipe_id: int,
     planned_for: Optional[date] = Query(
-        None, description="YYYY-MM-DD date to plan this recipe"
+        None,
+        description="YYYY-MM-DD date to plan this recipe",
     ),
     db: AsyncSession = Depends(get_db),
 ):
