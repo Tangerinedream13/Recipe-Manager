@@ -143,7 +143,11 @@ async def get_all_recipes(
             "Sort by: newest, oldest, title-asc, title-desc, updated, "
             "planned-asc, planned-desc"
         ),
+        description="Sort by: newest, oldest, title-asc, title-desc, updated, planned-asc, planned-desc",
     ),
+    page: int = Query(0, ge=0, description="Page number (0-based)"),
+    limit: int = Query(10, ge=1, le=50, description="Recipes per page"),
+    db: AsyncSession = Depends(get_db),
     page: int = Query(
         0,
         ge=0,
