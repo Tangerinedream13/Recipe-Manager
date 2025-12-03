@@ -17,11 +17,7 @@ import {
 } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 
-// Use API_URL from environment or fall back to localhost
-const API_URL =
-    import.meta.env.VITE_API_URL !== undefined
-        ? import.meta.env.VITE_API_URL
-        : 'http://localhost:8000';
+import { API_URL } from './config'; 
 
 export default function MealPlanner() {
     const [recipes, setRecipes] = useState([]);

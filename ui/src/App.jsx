@@ -7,13 +7,7 @@ import Recipes from './Recipes';
 import CreateRecipe from './CreateRecipe';
 import MealPlanner from './MealPlanner';
 
-// Use environment variable for API URL, default to localhost for development
-// In production (Railway), this will be empty string since frontend and backend are same origin
-// Check if VITE_API_URL is explicitly set (even if empty string), otherwise use localhost
-export const API_URL =
-    import.meta.env.VITE_API_URL !== undefined
-        ? import.meta.env.VITE_API_URL // address for production architecture
-        : 'http://localhost:8000'; // address for local architecture
+import { API_URL } from './config'; 
 
 export default function App() {
     const [activeView, setActiveView] = useState('recipes');
