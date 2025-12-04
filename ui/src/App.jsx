@@ -7,7 +7,7 @@ import Recipes from './Recipes';
 import CreateRecipe from './CreateRecipe';
 import MealPlanner from './MealPlanner';
 
-import { API_URL } from './config'; 
+import { API_URL } from './config';
 
 export default function App() {
     const [activeView, setActiveView] = useState('recipes');

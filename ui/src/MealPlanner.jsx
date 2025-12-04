@@ -17,7 +17,7 @@ import {
 } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 
-import { API_URL } from './config'; 
+import { API_URL } from './config';
 
 export default function MealPlanner() {
     const [recipes, setRecipes] = useState([]);
