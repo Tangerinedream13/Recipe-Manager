@@ -21,7 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { DeleteIcon } from '@chakra-ui/icons';
 
-import { API_URL } from './App.jsx';
+import { API_URL } from './App';
 
 // Portions of the recipe card layout and Chakra UI styling were developed with assistance from ChatGPT.
 // The design direction, customization, and final implementation were completed by Maria Haddon.
