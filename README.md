@@ -50,5 +50,8 @@ All environment variables are handled inside docker-compose.yaml
 The frontend communicates iwth the backend at http://localhost:8000
 
 
+Weblink:  https://project02-fall2025-production-c014.up.railway.app
+
+
 
 
